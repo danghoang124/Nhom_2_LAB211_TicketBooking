@@ -1,4 +1,6 @@
 # Welcome to your organization's demo respository
-This code repository (or "repo") is designed to demonstrate the best GitHub has to offer with the least amount of noise.
-
-The repo includes an `index.html` file (so it can render a web page), two GitHub Actions workflows, and a CSS stylesheet dependency.
+Nhóm 4 dự án đá banh
+Thành viên: 1: Hoàng Minh Hải Đăng
+            2: Đặng Xuân Thiện
+            3: Đinh Vũ Phương Khánh
+            4: Đỗ Đình Văn
