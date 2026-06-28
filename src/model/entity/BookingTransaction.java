@@ -85,17 +85,47 @@ public class BookingTransaction extends BaseEntity {
 
     // ── Getters & Setters ──────────────────────────────────────────────────────
 
-    public String            getTransactionId()   { return transactionId;   }
-    public String            getFanId()            { return fanId;           }
-    public String            getMatchId()          { return matchId;         }
-    public int               getNumberOfTickets()  { return numberOfTickets; }
-    public long              getTotalAmount()       { return totalAmount;     }
-    public TransactionStatus getStatus()           { return status;          }
-    public LockMechanism     getMechanism()        { return mechanism;       }
-    public String            getCreatedAt()        { return createdAt;       }
-    public long              getDurationMs()       { return durationMs;      }
+    public String getTransactionId() {
+        return transactionId;
+    }
 
-    public void setStatus(TransactionStatus status) { this.status = status; }
+    public String getFanId() {
+        return fanId;
+    }
 
-    public boolean isSuccessful() { return status == TransactionStatus.SUCCESS; }
+    public String getMatchId() {
+        return matchId;
+    }
+
+    public int getNumberOfTickets() {
+        return numberOfTickets;
+    }
+
+    public long getTotalAmount() {
+        return totalAmount;
+    }
+
+    public TransactionStatus getStatus() {
+        return status;
+    }
+
+    public LockMechanism getMechanism() {
+        return mechanism;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getDurationMs() {
+        return durationMs;
+    }
+
+    public void setStatus(TransactionStatus status) {
+        this.status = status;
+    }
+
+    public boolean isSuccessful() {
+        return status == TransactionStatus.SUCCESS;
+    }
 }

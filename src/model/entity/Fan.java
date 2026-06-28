@@ -80,14 +80,39 @@ public class Fan extends BaseEntity {
 
     // ── Getters & Setters ──────────────────────────────────────────────────────
 
-    public String  getFanId()        { return fanId;        }
-    public String  getUsername()     { return username;     }
-    public String  getPasswordHash() { return passwordHash; }
-    public String  getFullName()     { return fullName;     }
-    public String  getEmail()        { return email;        }
-    public String  getPhone()        { return phone;        }
-    public String  getCreatedAt()    { return createdAt;    }
-    public boolean isActive()        { return isActive;     }
+    public String getFanId() {
+        return fanId;
+    }
 
-    public void setActive(boolean active) { this.isActive = active; }
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
 }

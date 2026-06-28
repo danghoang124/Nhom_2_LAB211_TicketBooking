@@ -68,9 +68,23 @@ public class Stadium extends BaseEntity {
 
     // ── Getters ────────────────────────────────────────────────────────────────
 
-    public String getStadiumId()    { return stadiumId;     }
-    public String getName()         { return name;          }
-    public String getCity()         { return city;          }
-    public String getAddress()      { return address;       }
-    public int    getTotalCapacity(){ return totalCapacity; }
+    public String getStadiumId() {
+        return stadiumId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public int getTotalCapacity() {
+        return totalCapacity;
+    }
 }

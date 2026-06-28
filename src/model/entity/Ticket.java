@@ -71,19 +71,49 @@ public class Ticket extends BaseEntity {
 
     // ── Business logic ─────────────────────────────────────────────────────────
 
-    public boolean isValid()     { return status == TicketStatus.VALID;     }
-    public boolean isCancelled() { return status == TicketStatus.CANCELLED; }
+    public boolean isValid() {
+        return status == TicketStatus.VALID;
+    }
+
+    public boolean isCancelled() {
+        return status == TicketStatus.CANCELLED;
+    }
 
     // ── Getters & Setters ──────────────────────────────────────────────────────
 
-    public String       getTicketId()      { return ticketId;      }
-    public String       getFanId()         { return fanId;         }
-    public String       getSeatId()        { return seatId;        }
-    public String       getMatchId()       { return matchId;       }
-    public String       getTransactionId() { return transactionId; }
-    public long         getPrice()         { return price;         }
-    public String       getBookedAt()      { return bookedAt;      }
-    public TicketStatus getStatus()        { return status;        }
+    public String getTicketId() {
+        return ticketId;
+    }
 
-    public void setStatus(TicketStatus status) { this.status = status; }
+    public String getFanId() {
+        return fanId;
+    }
+
+    public String getSeatId() {
+        return seatId;
+    }
+
+    public String getMatchId() {
+        return matchId;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public long getPrice() {
+        return price;
+    }
+
+    public String getBookedAt() {
+        return bookedAt;
+    }
+
+    public TicketStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TicketStatus status) {
+        this.status = status;
+    }
 }

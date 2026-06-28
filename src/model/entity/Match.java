@@ -65,16 +65,40 @@ public class Match extends BaseEntity {
 
     // ── Getters & Setters ──────────────────────────────────────────────────────
 
-    public String      getMatchId()   { return matchId;   }
-    public String      getStadiumId() { return stadiumId; }
-    public String      getHomeTeam()  { return homeTeam;  }
-    public String      getAwayTeam()  { return awayTeam;  }
-    public String      getMatchDate() { return matchDate; }
-    public String      getMatchTime() { return matchTime; }
-    public MatchStatus getStatus()    { return status;    }
+    public String getMatchId() {
+        return matchId;
+    }
 
-    public void setStatus(MatchStatus status) { this.status = status; }
+    public String getStadiumId() {
+        return stadiumId;
+    }
+
+    public String getHomeTeam() {
+        return homeTeam;
+    }
+
+    public String getAwayTeam() {
+        return awayTeam;
+    }
+
+    public String getMatchDate() {
+        return matchDate;
+    }
+
+    public String getMatchTime() {
+        return matchTime;
+    }
+
+    public MatchStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(MatchStatus status) {
+        this.status = status;
+    }
 
     /** Tiện ích: trả về chuỗi mô tả trận đấu. */
-    public String getTitle() { return homeTeam + " vs " + awayTeam; }
+    public String getTitle() {
+        return homeTeam + " vs " + awayTeam;
+    }
 }

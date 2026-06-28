@@ -66,12 +66,28 @@ public class Section extends BaseEntity {
 
     // ── Getters ────────────────────────────────────────────────────────────────
 
-    public String      getSectionId()   { return sectionId;   }
-    public SectionType getSectionType() { return sectionType; }
-    public int         getTotalRows()   { return totalRows;   }
-    public int         getSeatsPerRow() { return seatsPerRow; }
-    public long        getBasePrice()   { return basePrice;   }
+    public String getSectionId() {
+        return sectionId;
+    }
+
+    public SectionType getSectionType() {
+        return sectionType;
+    }
+
+    public int getTotalRows() {
+        return totalRows;
+    }
+
+    public int getSeatsPerRow() {
+        return seatsPerRow;
+    }
+
+    public long getBasePrice() {
+        return basePrice;
+    }
 
     /** Tổng số ghế trong section này (totalRows × seatsPerRow). */
-    public int getTotalCapacity() { return totalRows * seatsPerRow; }
+    public int getTotalCapacity() {
+        return totalRows * seatsPerRow;
+    }
 }

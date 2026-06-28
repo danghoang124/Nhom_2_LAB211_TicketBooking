@@ -73,7 +73,9 @@ public class Seat extends BaseEntity {
     // ── Business logic ─────────────────────────────────────────────────────────
 
     /** Kiểm tra ghế có thể đặt không. */
-    public boolean isAvailable() { return status == SeatStatus.AVAILABLE; }
+    public boolean isAvailable() {
+        return status == SeatStatus.AVAILABLE;
+    }
 
     /**
      * Đổi trạng thái và tăng version.
@@ -86,18 +88,45 @@ public class Seat extends BaseEntity {
 
     // ── Getters & Setters ──────────────────────────────────────────────────────
 
-    public String     getSeatId()     { return seatId;     }
-    public String     getSectionId()  { return sectionId;  }
-    public String     getMatchId()    { return matchId;    }
-    public String     getRowLabel()   { return rowLabel;   }
-    public int        getSeatNumber() { return seatNumber; }
-    public SeatStatus getStatus()     { return status;     }
-    public int        getVersion()    { return version;    }
+    public String getSeatId() {
+        return seatId;
+    }
+
+    public String getSectionId() {
+        return sectionId;
+    }
+
+    public String getMatchId() {
+        return matchId;
+    }
+
+    public String getRowLabel() {
+        return rowLabel;
+    }
+
+    public int getSeatNumber() {
+        return seatNumber;
+    }
+
+    public SeatStatus getStatus() {
+        return status;
+    }
+
+    public int getVersion() {
+        return version;
+    }
 
     // Setters thô (dùng bởi Optimistic Locking khi cần đặt version cụ thể)
-    public void setStatus(SeatStatus status)   { this.status = status;   }
-    public void setVersion(int version)        { this.version = version; }
+    public void setStatus(SeatStatus status) {
+        this.status = status;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
 
     /** Chuỗi hiển thị ngắn cho UI (ví dụ: "A-1"). */
-    public String getLabel() { return rowLabel + "-" + seatNumber; }
+    public String getLabel() {
+        return rowLabel + "-" + seatNumber;
+    }
 }
