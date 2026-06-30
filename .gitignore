@@ -1,0 +1,32 @@
+# Compiled class file
+*.class
+out/
+
+# macOS metadata files (AppleDouble)
+._*
+.DS_Store
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Node.js (if any)
+node_modules/
+package-lock.json
+
+# Log file
+*.log
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs
+hs_err_pid*
+replay_pid*
