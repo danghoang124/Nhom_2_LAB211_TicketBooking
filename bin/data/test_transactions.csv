@@ -1,0 +1,2 @@
+transactionId,fanId,matchId,numberOfTickets,totalAmount,status,mechanism,createdAt,durationMs
+TXN003,FAN01,MATCH01,1,200000,SUCCESS,SYNCHRONIZED,2026-07-01 00:13:11,1
