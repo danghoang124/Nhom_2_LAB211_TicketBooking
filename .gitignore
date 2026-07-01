@@ -6,6 +6,10 @@ out/
 ._*
 .DS_Store
 
+# macOS metadata files (AppleDouble)
+._*
+.DS_Store
+
 # IntelliJ IDEA
 .idea/
 *.iws
@@ -18,14 +22,6 @@ package-lock.json
 
 # Log file
 *.log
-
-# Package Files
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
 
 # virtual machine crash logs
 hs_err_pid*
