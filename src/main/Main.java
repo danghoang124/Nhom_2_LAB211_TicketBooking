@@ -1,12 +1,9 @@
 package main;
 
-import repository.*;
 import java.util.Scanner;
+import repository.*;
+import view.MainView;
 
-/**
- * Main application entry point for Stadium Ticket Booking Simulation.
- * Provides a welcome screen and CLI routing for the simulation.
- */
 public class Main {
 
     public static void main(String[] args) {
@@ -14,55 +11,67 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.println("\n=== HỆ THỐNG MÔ PHỎNG ĐẶT VÉ SÂN VẬN ĐỘNG (LAB211) ===");
-            System.out.println("1. Khởi chạy bộ tạo dữ liệu (DataGenerator)");
-            System.out.println("2. Xem cấu hình hệ thống (Sân vận động, Ghế...)");
-            System.out.println("3. Chạy kiểm thử hiệu năng đọc ghi (Performance Benchmarks)");
-            System.out.println("0. Thoát");
-            System.out.print("Chọn chức năng: ");
+            System.out.println("\n=== STADIUM TICKET BOOKING SIMULATION (LAB211) ===");
+            System.out.println("1. Run Data Generator (DataGenerator)");
+            System.out.println("2. View System Configuration (Stadiums, Seats...)");
+            System.out.println("3. Run Performance Benchmarks (PerformanceTest)");
+            System.out.println("4. Enter Ticket System (Login / Book / Report)");
+            System.out.println("0. Exit");
+            System.out.print("Select an option: ");
 
             String choice = scanner.nextLine().trim();
             if ("0".equals(choice)) {
-                System.out.println("Cảm ơn bạn đã sử dụng hệ thống!");
+                System.out.println("Thank you for using the system!");
                 break;
             }
 
             switch (choice) {
                 case "1":
-                    System.out.println("\n[INFO] Đang chạy bộ sinh dữ liệu DataGenerator...");
+                    System.out.println("\n[INFO] Running DataGenerator...");
                     try {
                         generator.DataGenerator.main(new String[0]);
                     } catch (Exception e) {
-                        System.err.println("Lỗi khi chạy DataGenerator: " + e.getMessage());
+                        System.err.println("Error running DataGenerator: " + e.getMessage());
                     }
                     break;
                 case "2":
                     displaySystemInfo();
                     break;
                 case "3":
-                    System.out.println("\n[INFO] Đang chạy kiểm thử hiệu năng PerformanceTest...");
+                    System.out.println("\n[INFO] Running PerformanceTest...");
                     try {
                         test.PerformanceTest.main(new String[0]);
                     } catch (Exception e) {
-                        System.err.println("Lỗi khi chạy PerformanceTest: " + e.getMessage());
+                        System.err.println("Error running PerformanceTest: " + e.getMessage());
+                    }
+                    break;
+                case "4":
+                    System.out.println("\n[INFO] Initializing Ticket System...");
+                    try {
+                        AppContext appContext = new AppContext();
+                        MainView mainView = new MainView(appContext);
+                        mainView.start();
+                    } catch (Exception e) {
+                        System.err.println("Error starting Ticket System: " + e.getMessage());
+                        e.printStackTrace();
                     }
                     break;
                 default:
-                    System.out.println("Lựa chọn không hợp lệ. Vui lòng chọn lại!");
+                    System.out.println("Invalid option. Please try again!");
             }
         }
         scanner.close();
     }
 
     private static void printBanner() {
-        System.out.println("╔══════════════════════════════════════════════════════╗");
-        System.out.println("║            STADIUM TICKET BOOKING SIMULATION         ║");
-        System.out.println("║                 FPT UNIVERSITY - LAB211              ║");
-        System.out.println("╚══════════════════════════════════════════════════════╝");
+        System.out.println("======================================================");
+        System.out.println("            STADIUM TICKET BOOKING SIMULATION         ");
+        System.out.println("                 FPT UNIVERSITY - LAB211              ");
+        System.out.println("======================================================");
     }
 
     private static void displaySystemInfo() {
-        System.out.println("\n--- CẤU HÌNH HỆ THỐNG HIỆN TẠI ---");
+        System.out.println("\n--- CURRENT SYSTEM CONFIGURATION ---");
         try {
             StadiumRepository stadiumRepo = new StadiumRepository();
             SectionRepository sectionRepo = new SectionRepository();
@@ -70,14 +79,14 @@ public class Main {
             SeatRepository seatRepo = new SeatRepository();
             FanRepository fanRepo = new FanRepository();
 
-            System.out.printf("- Số lượng Sân vận động: %d%n", stadiumRepo.count());
-            System.out.printf("- Số lượng Khán đài (Section): %d%n", sectionRepo.count());
-            System.out.printf("- Số lượng Trận đấu: %d%n", matchRepo.count());
-            System.out.printf("- Tổng số Ghế: %d%n", seatRepo.count());
-            System.out.printf("- Số lượng Người hâm mộ (Fan): %d%n", fanRepo.count());
+            System.out.printf("- Stadium count: %d%n", stadiumRepo.count());
+            System.out.printf("- Section count: %d%n", sectionRepo.count());
+            System.out.printf("- Match count: %d%n", matchRepo.count());
+            System.out.printf("- Total Seats: %d%n", seatRepo.count());
+            System.out.printf("- Fan count: %d%n", fanRepo.count());
         } catch (Exception e) {
             System.out.println(
-                    "[⚠️ LƯU Ý] Chưa thể đọc được cấu hình hệ thống. Vui lòng chọn chức năng (1) để sinh dữ liệu CSV trước!");
+                    "[WARNING] Cannot read system configuration. Please select option (1) to generate CSV data first!");
         }
     }
 }
