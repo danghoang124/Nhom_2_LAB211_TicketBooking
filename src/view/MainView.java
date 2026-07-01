@@ -299,7 +299,7 @@ public class MainView {
 
     private void showMyTickets() {
         Fan currentFan = fanController.getCurrentFan();
-        List<Ticket> tickets = fanController.viewMyTickets();
+        List<Ticket> tickets = fanController.getMyTickets();
 
         System.out.println("\n======================================");
         System.out.println("           MY TICKETS                 ");
