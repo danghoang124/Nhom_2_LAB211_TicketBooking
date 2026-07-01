@@ -1,0 +1,19 @@
+{
+  "java.import.maven.enabled": false,
+  "java.import.gradle.enabled": false,
+  "java.project.sourcePaths": [
+    "src"
+  ],
+  "java.project.outputPath": "out/main",
+  "java.project.referencedLibraries": [
+    "src/lib/junit-platform-console-standalone-1.10.2.jar"
+  ],
+  "java.project.resourceFilters": [
+    "node_modules",
+    ".git",
+    "src/lib",
+    "src/out",
+    "out"
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic"
+}

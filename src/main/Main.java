@@ -40,7 +40,7 @@ public class Main {
                 case "3":
                     System.out.println("\n[INFO] Running PerformanceTest...");
                     try {
-                        test.PerformanceTest.main(new String[0]);
+                        benchmark.PerformanceTest.main(new String[0]);
                     } catch (Exception e) {
                         System.err.println("Error running PerformanceTest: " + e.getMessage());
                     }

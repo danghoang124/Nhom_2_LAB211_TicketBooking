@@ -1,4 +1,4 @@
-package test;
+package benchmark;
 
 import repository.SeatRepository;
 import model.entity.Seat;
@@ -12,16 +12,10 @@ import java.util.List;
  * <p>Test này đo thời gian {@code findAll()} trên {@code data/seats.csv}
  * (~30,000 dòng) và in ra thống kê chi tiết.
  *
- * <p>Compile:
+ * <p>Compile &amp; chạy (từ thư mục gốc project):
  * <pre>
- *   javac -encoding UTF-8 -d src/out \
- *     src/model/enums/*.java src/model/entity/*.java \
- *     src/repository/CsvRepository.java src/repository/*.java \
- *     src/test/PerformanceTest.java
- * </pre>
- * Chạy:
- * <pre>
- *   java -cp src/out test.PerformanceTest
+ *   javac -encoding UTF-8 -cp src -d out $(find src -name "*.java" ! -path "src/test/*")
+ *   java -cp out benchmark.PerformanceTest
  * </pre>
  */
 public class PerformanceTest {
