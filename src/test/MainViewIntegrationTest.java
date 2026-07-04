@@ -54,7 +54,7 @@ public class MainViewIntegrationTest {
         txnRepo     = new TransactionRepository();
 
         fanController     = new FanController(fanRepo, ticketRepo);
-        bookingController = new BookingController(seatRepo, ticketRepo, txnRepo);
+        bookingController = new BookingController(seatRepo, sectionRepo, ticketRepo, txnRepo);
         reportController  = new ReportController(ticketRepo, txnRepo, matchRepo, seatRepo, sectionRepo);
 
         // Cleanup: xóa user test cũ nếu tồn tại

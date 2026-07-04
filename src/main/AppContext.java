@@ -47,7 +47,8 @@ public class AppContext {
 
         // 2. Khởi tạo Controllers (inject dependencies)
         this.fanController = new FanController(fanRepository, ticketRepository);
-        this.bookingController = new BookingController(seatRepository, ticketRepository, transactionRepository);
+        this.bookingController = new BookingController(
+                seatRepository, sectionRepository, ticketRepository, transactionRepository);
         this.reportController = new ReportController(ticketRepository, transactionRepository,
                                                       matchRepository, seatRepository, sectionRepository);
     }

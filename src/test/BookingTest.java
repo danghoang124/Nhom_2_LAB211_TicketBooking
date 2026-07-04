@@ -9,6 +9,7 @@ import model.enums.SeatStatus;
 import model.enums.TicketStatus;
 import model.enums.TransactionStatus;
 import repository.SeatRepository;
+import repository.SectionRepository;
 import repository.TicketRepository;
 import repository.TransactionRepository;
 
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 public class BookingTest {
     private SeatRepository seatRepo;
+    private SectionRepository sectionRepo;
     private TicketRepository ticketRepo;
     private TransactionRepository transactionRepo;
     private BookingController controller;
@@ -32,6 +34,10 @@ public class BookingTest {
         seatRepo = new SeatRepository() {
             @Override public String getFilePath() { return "data/test_seats.csv"; }
         };
+        // SectionRepository dùng data thật (sections.csv) để tra giá vé đúng.
+        // Trong test, giá vé lấy từ sections.csv thật nên test cần chạy ở thư mục
+        // gốc project (nơi có data/sections.csv).
+        sectionRepo = new SectionRepository();
         ticketRepo = new TicketRepository() {
             @Override public String getFilePath() { return "data/test_tickets.csv"; }
         };
@@ -44,7 +50,7 @@ public class BookingTest {
         new File("data/test_tickets.csv").delete();
         new File("data/test_transactions.csv").delete();
 
-        controller = new BookingController(seatRepo, ticketRepo, transactionRepo);
+        controller = new BookingController(seatRepo, sectionRepo, ticketRepo, transactionRepo);
     }
 
     @Test

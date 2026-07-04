@@ -86,9 +86,12 @@ public class RegisterView {
             System.out.println("  Bạn đã được tự động đăng nhập vào hệ thống.");
             printDivider();
 
-            // Auto-login sau khi đăng ký thành công
-            // (fanController.register đã tạo fan, giờ login luôn)
-            fanController.login(username, password);
+            // Auto-login sau khi đăng ký thành công.
+            // KHÔNG gọi fanController.login(username, password) vì login() sẽ
+            // sha256(password) một lần nữa → sha256(sha256(password)) không khớp
+            // với sha256(password) đã lưu trong CSV → luôn thất bại (double-hash bug).
+            // Thay vào đó: set currentFan trực tiếp từ Fan vừa tạo.
+            fanController.setCurrentFan(result.getFan());
             return true;
 
         } else {

@@ -238,6 +238,20 @@ public class FanController {
     }
 
     /**
+     * Đặt Fan hiện tại trực tiếp vào session mà không cần hash lại password.
+     *
+     * <p>Dùng ngay sau khi đăng ký thành công để tránh double-hash bug:
+     * nếu gọi {@code login(username, password)} sau {@code register()},
+     * password sẽ bị hash lần 2 ({@code sha256(sha256(password))}) và
+     * không khớp với hash đã lưu trong CSV.
+     *
+     * @param fan Fan vừa được tạo (lấy từ {@link RegisterResult#getFan()}).
+     */
+    public void setCurrentFan(Fan fan) {
+        this.currentFan = fan;
+    }
+
+    /**
      * Lấy thông tin Fan đang đăng nhập.
      *
      * @return Fan hiện tại, hoặc null nếu chưa đăng nhập.

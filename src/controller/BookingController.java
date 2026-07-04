@@ -2,12 +2,14 @@ package controller;
 
 import model.entity.BookingTransaction;
 import model.entity.Seat;
+import model.entity.Section;
 import model.entity.Ticket;
 import model.enums.LockMechanism;
 import model.enums.SeatStatus;
 import model.enums.TicketStatus;
 import model.enums.TransactionStatus;
 import repository.SeatRepository;
+import repository.SectionRepository;
 import repository.TicketRepository;
 import repository.TransactionRepository;
 
@@ -16,17 +18,36 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Controller xử lý logic nghiệp vụ đặt vé và hủy vé.
+ *
+ * <p><b>Dependencies:</b>
+ * <ul>
+ *   <li>{@link SeatRepository}        — kiểm tra và cập nhật trạng thái ghế.</li>
+ *   <li>{@link SectionRepository}     — tra giá vé theo khu vực (basePrice).</li>
+ *   <li>{@link TicketRepository}      — tạo và quản lý vé.</li>
+ *   <li>{@link TransactionRepository} — ghi lại lịch sử giao dịch.</li>
+ * </ul>
+ */
 public class BookingController {
-    private final SeatRepository seatRepository;
-    private final TicketRepository ticketRepository;
-    private final TransactionRepository transactionRepository;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public BookingController(SeatRepository seatRepository, 
-                             TicketRepository ticketRepository, 
+    private final SeatRepository        seatRepository;
+    private final SectionRepository     sectionRepository;
+    private final TicketRepository      ticketRepository;
+    private final TransactionRepository transactionRepository;
+    private final DateTimeFormatter     formatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    /** Giá mặc định dùng khi không tra được Section (fallback). */
+    private static final long DEFAULT_PRICE = 500_000L;
+
+    public BookingController(SeatRepository seatRepository,
+                             SectionRepository sectionRepository,
+                             TicketRepository ticketRepository,
                              TransactionRepository transactionRepository) {
-        this.seatRepository = seatRepository;
-        this.ticketRepository = ticketRepository;
+        this.seatRepository        = seatRepository;
+        this.sectionRepository     = sectionRepository;
+        this.ticketRepository      = ticketRepository;
         this.transactionRepository = transactionRepository;
     }
 
@@ -49,8 +70,11 @@ public class BookingController {
             }
             Seat seat = seatOpt.get();
             
-            // Lấy giá vé (tạm thời gán mặc định, thực tế lấy từ SectionRepository)
-            totalAmount = 500000;
+            // Lấy giá vé từ Section tương ứng với ghế.
+            // seat.getSectionId() → tra SectionRepository → section.getBasePrice().
+            // Nếu không tìm thấy Section (dữ liệu bất thường) thì dùng DEFAULT_PRICE.
+            Optional<Section> sectionOpt = sectionRepository.findById(seat.getSectionId());
+            totalAmount = sectionOpt.map(Section::getBasePrice).orElse(DEFAULT_PRICE);
             
             if (seat.getStatus() == SeatStatus.BOOKED || ticketRepository.existsBySeatAndMatch(seatId, matchId)) {
                 System.out.println("Ghế đã được đặt: " + seatId);
@@ -58,9 +82,10 @@ public class BookingController {
                 return false;
             }
 
-            // 2. Đổi trạng thái Seat
-            seat.setStatus(SeatStatus.BOOKED);
-            seat.setVersion(seat.getVersion() + 1);
+            // 2. Đổi trạng thái Seat sang BOOKED.
+            // Dùng updateStatus() thay vì setStatus() + setVersion() thô —
+            // updateStatus() tự tăng version, đảm bảo Optimistic Locking luôn nhất quán.
+            seat.updateStatus(SeatStatus.BOOKED);
             seatRepository.save(seat);
 
             // 3. Sinh Ticket
@@ -93,11 +118,13 @@ public class BookingController {
         ticket.setStatus(TicketStatus.CANCELLED);
         ticketRepository.save(ticket);
 
-        // Phục hồi ghế
+        // Phục hồi ghế về AVAILABLE.
+        // Dùng updateStatus() để tăng version — nếu dùng setStatus() thô thì version
+        // không tăng, Optimistic Locking sẽ bị lệch ở các lần booking tiếp theo.
         Optional<Seat> seatOpt = seatRepository.findById(ticket.getSeatId());
         if (seatOpt.isPresent()) {
             Seat seat = seatOpt.get();
-            seat.setStatus(SeatStatus.AVAILABLE);
+            seat.updateStatus(SeatStatus.AVAILABLE);
             seatRepository.save(seat);
         }
         return true;
