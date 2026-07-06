@@ -64,7 +64,7 @@ public class BookingController {
             // 1. Kiểm tra ghế còn trống
             Optional<Seat> seatOpt = seatRepository.findById(seatId);
             if (!seatOpt.isPresent()) {
-                System.out.println("Ghế không tồn tại: " + seatId);
+                System.out.println("Seat not found: " + seatId);
                 createTransaction(transactionId, fanId, matchId, 1, totalAmount, TransactionStatus.FAILED, mechanism, startTime);
                 return false;
             }
@@ -77,16 +77,37 @@ public class BookingController {
             totalAmount = sectionOpt.map(Section::getBasePrice).orElse(DEFAULT_PRICE);
             
             if (seat.getStatus() == SeatStatus.BOOKED || ticketRepository.existsBySeatAndMatch(seatId, matchId)) {
-                System.out.println("Ghế đã được đặt: " + seatId);
+                System.out.println("Seat already booked: " + seatId);
                 createTransaction(transactionId, fanId, matchId, 1, totalAmount, TransactionStatus.FAILED, mechanism, startTime);
                 return false;
             }
 
-            // 2. Đổi trạng thái Seat sang BOOKED.
-            // Dùng updateStatus() thay vì setStatus() + setVersion() thô —
-            // updateStatus() tự tăng version, đảm bảo Optimistic Locking luôn nhất quán.
-            seat.updateStatus(SeatStatus.BOOKED);
-            seatRepository.save(seat);
+            // 2. Đổi trạng thái Seat sang BOOKED theo cơ chế
+            boolean updateSuccess = false;
+            switch (mechanism) {
+                case NO_LOCK:
+                    seat.updateStatus(SeatStatus.BOOKED);
+                    seatRepository.save(seat);
+                    updateSuccess = true;
+                    break;
+                case SYNCHRONIZED:
+                    updateSuccess = seatRepository.updateStatusSynchronized(seatId, SeatStatus.BOOKED);
+                    break;
+                case FILE_LOCK:
+                    updateSuccess = seatRepository.updateStatusFileLock(seatId, SeatStatus.BOOKED);
+                    break;
+                case OPTIMISTIC:
+                    updateSuccess = seatRepository.updateStatusOptimistic(seatId, SeatStatus.BOOKED, seat.getVersion());
+                    break;
+                default:
+                    updateSuccess = false;
+            }
+
+            if (!updateSuccess) {
+                System.out.println("Booking failed due to conflict (Double Booking prevented): " + seatId);
+                createTransaction(transactionId, fanId, matchId, 1, totalAmount, TransactionStatus.FAILED, mechanism, startTime);
+                return false;
+            }
 
             // 3. Sinh Ticket
             createTicket(fanId, matchId, seatId, transactionId, totalAmount);
@@ -96,7 +117,7 @@ public class BookingController {
             success = true;
             
         } catch (Exception e) {
-            System.out.println("Lỗi hệ thống khi đặt vé: " + e.getMessage());
+            System.out.println("System error during booking: " + e.getMessage());
             createTransaction(transactionId, fanId, matchId, 1, totalAmount, TransactionStatus.FAILED, mechanism, startTime);
         }
         
@@ -109,7 +130,7 @@ public class BookingController {
     public boolean cancelBooking(String ticketId) {
         Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
         if (!ticketOpt.isPresent() || ticketOpt.get().isCancelled()) {
-            System.out.println("Vé không hợp lệ hoặc đã bị hủy.");
+            System.out.println("Ticket is invalid or already cancelled.");
             return false;
         }
         Ticket ticket = ticketOpt.get();

@@ -16,6 +16,7 @@ public class Main {
             System.out.println("2. View System Configuration (Stadiums, Seats...)");
             System.out.println("3. Run Performance Benchmarks (PerformanceTest)");
             System.out.println("4. Enter Ticket System (Login / Book / Report)");
+            System.out.println("5. Run Concurrent Simulator");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -53,6 +54,18 @@ public class Main {
                         mainView.start();
                     } catch (Exception e) {
                         System.err.println("Error starting Ticket System: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                    break;
+                case "5":
+                    System.out.println("\n[INFO] Starting Simulator...");
+                    try {
+                        AppContext appCtx = new AppContext();
+                        controller.SimulatorController simCtrl = new controller.SimulatorController(appCtx.getBookingController());
+                        view.SimulatorView simView = new view.SimulatorView(simCtrl, appCtx.getSeatRepository(), appCtx.getTicketRepository(), appCtx.getTransactionRepository());
+                        simView.start();
+                    } catch (Exception e) {
+                        System.err.println("Error running Simulator: " + e.getMessage());
                         e.printStackTrace();
                     }
                     break;

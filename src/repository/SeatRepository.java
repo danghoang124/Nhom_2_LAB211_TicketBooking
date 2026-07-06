@@ -5,6 +5,9 @@ import model.enums.SeatStatus;
 
 import java.util.List;
 import java.util.Optional;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 
 /**
  * Repository cụ thể cho {@link Seat} — đọc/ghi {@code data/seats.csv}.
@@ -147,7 +150,7 @@ public class SeatRepository extends CsvRepository<Seat> {
      * @param expectedVersion Version mà caller đọc được trước đó.
      * @return {@code true} nếu cập nhật thành công, {@code false} nếu bị conflict.
      */
-    public boolean updateStatusOptimistic(String seatId, SeatStatus newStatus, int expectedVersion) {
+    public synchronized boolean updateStatusOptimistic(String seatId, SeatStatus newStatus, int expectedVersion) {
         List<Seat> all = findAll();
 
         boolean updated = false;
@@ -183,5 +186,81 @@ public class SeatRepository extends CsvRepository<Seat> {
      */
     public Optional<Seat> findByIdForUpdate(String seatId) {
         return findById(seatId);
+    }
+
+    // ── Synchronized and File Lock ────────────────────────────────────────────
+
+    /**
+     * Cập nhật trạng thái ghế sử dụng cơ chế Synchronized block.
+     * Đảm bảo không có 2 thread nào có thể đọc và ghi đồng thời.
+     */
+    public synchronized boolean updateStatusSynchronized(String seatId, SeatStatus newStatus) {
+        List<Seat> all = findAll();
+        boolean updated = false;
+        for (int i = 0; i < all.size(); i++) {
+            Seat seat = all.get(i);
+            if (seatId.equals(seat.getSeatId())) {
+                if (seat.getStatus() == SeatStatus.BOOKED) {
+                    return false; // Đã được đặt
+                }
+                seat.updateStatus(newStatus);
+                all.set(i, seat);
+                updated = true;
+                break;
+            }
+        }
+        if (updated) {
+            saveAll(all);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Cập nhật trạng thái ghế sử dụng cơ chế File Lock.
+     * Khoá ở tầng OS đảm bảo không thread nào khác (thậm chí tiến trình khác) can thiệp.
+     */
+    public boolean updateStatusFileLock(String seatId, SeatStatus newStatus) {
+        try (RandomAccessFile file = new RandomAccessFile(FILE_PATH, "rw");
+             FileChannel channel = file.getChannel()) {
+            
+            // Lấy exclusive lock trên file
+            FileLock lock = channel.lock();
+            try {
+                // Đọc toàn bộ (Vì đã có OS lock, ta có thể dùng findAll đọc trực tiếp)
+                List<Seat> all = findAll();
+                boolean updated = false;
+                for (int i = 0; i < all.size(); i++) {
+                    Seat seat = all.get(i);
+                    if (seatId.equals(seat.getSeatId())) {
+                        if (seat.getStatus() == SeatStatus.BOOKED) {
+                            return false; // Đã được đặt
+                        }
+                        seat.updateStatus(newStatus);
+                        all.set(i, seat);
+                        updated = true;
+                        break;
+                    }
+                }
+                
+                if (updated) {
+                    // Xóa file cũ và ghi lại nội dung mới
+                    file.setLength(0); // Truncate the file to 0 bytes
+                    file.writeBytes(getCsvHeader() + System.lineSeparator());
+                    for (Seat s : all) {
+                        file.writeBytes(s.toCsvLine() + System.lineSeparator());
+                    }
+                    return true;
+                }
+                return false;
+            } finally {
+                if (lock != null) {
+                    lock.release();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error during FileLock update: " + e.getMessage());
+            return false;
+        }
     }
 }

@@ -97,12 +97,12 @@ public abstract class CsvRepository<T extends BaseEntity> {
                     result.add(parseFromCsvLine(line));
                 } catch (Exception e) {
                     // Ghi lỗi nhưng không dừng — bỏ qua dòng lỗi
-                    System.err.println("[CsvRepository] Bỏ qua dòng lỗi trong "
+                    System.err.println("[CsvRepository] Skipping invalid line in "
                         + getFilePath() + ": " + e.getMessage());
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Không đọc được file: " + getFilePath(), e);
+            throw new RuntimeException("Cannot read file: " + getFilePath(), e);
         }
         return result;
     }
@@ -230,7 +230,7 @@ public abstract class CsvRepository<T extends BaseEntity> {
                 bw.newLine();
             }
         } catch (IOException e) {
-            throw new RuntimeException("Không ghi được file: " + getFilePath(), e);
+            throw new RuntimeException("Cannot write file: " + getFilePath(), e);
         }
     }
 
@@ -254,7 +254,7 @@ public abstract class CsvRepository<T extends BaseEntity> {
                 bw.write(getCsvHeader());
                 bw.newLine();
             } catch (IOException e) {
-                throw new RuntimeException("Không tạo được file: " + getFilePath(), e);
+                throw new RuntimeException("Cannot create file: " + getFilePath(), e);
             }
         }
 
@@ -266,7 +266,7 @@ public abstract class CsvRepository<T extends BaseEntity> {
             bw.write(entity.toCsvLine());
             bw.newLine();
         } catch (IOException e) {
-            throw new RuntimeException("Không append được vào file: " + getFilePath(), e);
+            throw new RuntimeException("Cannot append to file: " + getFilePath(), e);
         }
     }
 }

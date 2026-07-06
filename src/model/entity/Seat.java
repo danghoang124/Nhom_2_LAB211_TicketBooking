@@ -57,7 +57,7 @@ public class Seat extends BaseEntity {
         String[] f = splitCsvLine(line);
         if (f.length < 7) {
             throw new IllegalArgumentException(
-                "Seat CSV cần ít nhất 7 cột, nhưng chỉ có " + f.length + ": " + line);
+                "Seat CSV requires at least 7 columns, but only has " + f.length + ": " + line);
         }
         return new Seat(
             f[0].trim(),

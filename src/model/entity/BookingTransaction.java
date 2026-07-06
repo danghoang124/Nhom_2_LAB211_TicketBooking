@@ -68,7 +68,7 @@ public class BookingTransaction extends BaseEntity {
         String[] f = splitCsvLine(line);
         if (f.length < 9) {
             throw new IllegalArgumentException(
-                "BookingTransaction CSV cần ít nhất 9 cột, nhưng chỉ có " + f.length + ": " + line);
+                "BookingTransaction CSV requires at least 9 columns, but only has " + f.length + ": " + line);
         }
         return new BookingTransaction(
             f[0].trim(),
