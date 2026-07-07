@@ -195,6 +195,41 @@ public class StadiumController {
         return seatRepository.findAvailableBySectionAndMatch(sectionId, matchId).size();
     }
 
+    /**
+     * Lấy tất cả trận đấu (không lọc).
+     */
+    public List<Match> getAllMatches() {
+        return matchRepository.findAll();
+    }
+
+    /**
+     * Kiểm tra trận đấu có tồn tại không.
+     */
+    public boolean matchExists(String matchId) {
+        return matchRepository.existsById(matchId);
+    }
+
+    /**
+     * Lấy danh sách ghế theo khu vực và trận đấu.
+     */
+    public List<Seat> getSeatsBySectionAndMatch(String sectionId, String matchId) {
+        return seatRepository.findBySectionAndMatch(sectionId, matchId);
+    }
+
+    /**
+     * Lấy danh sách ghế còn trống theo khu vực và trận đấu.
+     */
+    public List<Seat> getAvailableSeatsBySectionAndMatch(String sectionId, String matchId) {
+        return seatRepository.findAvailableBySectionAndMatch(sectionId, matchId);
+    }
+
+    /**
+     * Đếm số ghế còn trống của một trận đấu.
+     */
+    public int getAvailableSeatsCount(String matchId) {
+        return seatRepository.countAvailable(matchId);
+    }
+
     // ── PRIVATE HELPER ────────────────────────────────────────────────────────
 
     /**

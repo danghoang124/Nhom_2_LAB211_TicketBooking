@@ -3,6 +3,7 @@ package view;
 import controller.BookingController;
 import controller.FanController;
 import controller.ReportController;
+import controller.StadiumController;
 import main.AppContext;
 import model.entity.Fan;
 import model.entity.Match;
@@ -11,10 +12,6 @@ import model.entity.Section;
 import model.entity.Ticket;
 import model.enums.LockMechanism;
 import model.enums.MatchStatus;
-import model.enums.SeatStatus;
-import repository.MatchRepository;
-import repository.SeatRepository;
-import repository.SectionRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,10 +25,7 @@ public class MainView {
     private final FanController fanController;
     private final BookingController bookingController;
     private final ReportController reportController;
-
-    private final MatchRepository matchRepository;
-    private final SeatRepository seatRepository;
-    private final SectionRepository sectionRepository;
+    private final StadiumController stadiumController;
 
     private final LoginView loginView;
     private final RegisterView registerView;
@@ -46,10 +40,7 @@ public class MainView {
         this.fanController = appContext.getFanController();
         this.bookingController = appContext.getBookingController();
         this.reportController = appContext.getReportController();
-
-        this.matchRepository = appContext.getMatchRepository();
-        this.seatRepository = appContext.getSeatRepository();
-        this.sectionRepository = appContext.getSectionRepository();
+        this.stadiumController = appContext.getStadiumController();
 
         this.loginView = new LoginView(fanController, scanner);
         this.registerView = new RegisterView(fanController, scanner);
@@ -160,7 +151,7 @@ public class MainView {
         System.out.println("                             MATCH LIST                                       ");
         System.out.println("==============================================================================");
 
-        List<Match> matches = matchRepository.findAll();
+        List<Match> matches = stadiumController.getAllMatches();
         if (matches.isEmpty()) {
             System.out.println("No matches found in the system.");
             return;
@@ -192,22 +183,21 @@ public class MainView {
         System.out.print("Enter Match ID (e.g. MATCH001): ");
         String matchId = scanner.nextLine().trim();
 
-        if (!matchRepository.existsById(matchId)) {
+        if (!stadiumController.matchExists(matchId)) {
             System.out.println("[FAILED] Match does not exist: " + matchId);
             return;
         }
 
-        List<Section> sections = sectionRepository.findAll();
+        List<Section> sections = stadiumController.getSections();
         System.out.println("\nSeat Sections:");
         for (Section sec : sections) {
-            List<Seat> seatsInSection = seatRepository.findBySectionAndMatch(sec.getSectionId(), matchId);
-            long availableCount = seatsInSection.stream().filter(Seat::isAvailable).count();
+            int available = stadiumController.showAvailableSeats(sec.getSectionId(), matchId);
             System.out.printf("  %s - %-15s | Price: %,10d VND | Available: %d/%d seats%n",
                     sec.getSectionId(),
                     sec.getSectionType().name(),
                     sec.getBasePrice(),
-                    availableCount,
-                    seatsInSection.size());
+                    available,
+                    sec.getTotalCapacity());
         }
 
         System.out.print("\nEnter Section ID to view details (e.g. SEC001), or press Enter to skip: ");
@@ -215,41 +205,17 @@ public class MainView {
         if (sectionId.isEmpty())
             return;
 
-        List<Seat> seats = seatRepository.findBySectionAndMatch(sectionId, matchId);
-        if (seats.isEmpty()) {
+        Section selectedSection = sections.stream()
+                .filter(s -> s.getSectionId().equals(sectionId))
+                .findFirst().orElse(null);
+        if (selectedSection == null) {
             System.out.println("No seats found in section " + sectionId + " for match " + matchId);
             return;
         }
 
-        System.out.printf("\n--- Seat Map: %s | Match: %s ---%n", sectionId, matchId);
-        System.out.println("  [O] = Available    [X] = Booked    [L] = Locked\n");
-
-        String currentRow = "";
-        for (Seat seat : seats) {
-            if (!seat.getRowLabel().equals(currentRow)) {
-                if (!currentRow.isEmpty())
-                    System.out.println();
-                currentRow = seat.getRowLabel();
-                System.out.printf("  Row %-3s: ", currentRow);
-            }
-
-            switch (seat.getStatus()) {
-                case AVAILABLE:
-                    System.out.print("[O] ");
-                    break;
-                case BOOKED:
-                    System.out.print("[X] ");
-                    break;
-                case LOCKED:
-                    System.out.print("[L] ");
-                    break;
-            }
-        }
-        System.out.println();
-
-        long avail = seats.stream().filter(s -> s.getStatus() == SeatStatus.AVAILABLE).count();
-        long booked = seats.stream().filter(s -> s.getStatus() == SeatStatus.BOOKED).count();
-        System.out.printf("\n  Total: %d seats | Available: %d | Booked: %d%n", seats.size(), avail, booked);
+        Seat[][] seatMap = stadiumController.buildSeatMap(sectionId, matchId);
+        int availableCount = stadiumController.showAvailableSeats(sectionId, matchId);
+        SeatMapView.displaySeatMap(seatMap, selectedSection, matchId, availableCount);
     }
 
     private void handleBooking() {
@@ -259,7 +225,7 @@ public class MainView {
         System.out.println("             BOOK TICKET              ");
         System.out.println("======================================");
 
-        List<Match> scheduledMatches = matchRepository.findByStatus(MatchStatus.SCHEDULED);
+        List<Match> scheduledMatches = stadiumController.getMatches();
         if (scheduledMatches.isEmpty()) {
             System.out.println("No matches are currently open for booking.");
             return;
@@ -267,7 +233,7 @@ public class MainView {
 
         System.out.println("\nMatches available for booking:");
         for (Match m : scheduledMatches) {
-            int available = seatRepository.countAvailable(m.getMatchId());
+            int available = stadiumController.getAvailableSeatsCount(m.getMatchId());
             System.out.printf("  %s | %-35s | %s %s | Available seats: %,d%n",
                     m.getMatchId(), m.getTitle(), m.getMatchDate(), m.getMatchTime(), available);
         }
@@ -285,10 +251,10 @@ public class MainView {
         }
 
         // ── Bước 1: Hiển thị và cho chọn Section ─────────────────────────────
-        List<Section> sections = sectionRepository.findAll();
+        List<Section> sections = stadiumController.getSections();
         System.out.println("\nSeat Sections:");
         for (Section sec : sections) {
-            List<Seat> availSeats = seatRepository.findAvailableBySectionAndMatch(
+            List<Seat> availSeats = stadiumController.getAvailableSeatsBySectionAndMatch(
                     sec.getSectionId(), matchId);
             System.out.printf("  %s - %-15s | Price: %,10d VND | Available: %d seats%n",
                     sec.getSectionId(), sec.getSectionType().name(),
@@ -308,7 +274,7 @@ public class MainView {
         }
 
         // ── Bước 2: Hiển thị ghế trống trong Section vừa chọn ────────────────
-        List<Seat> availableSeats = seatRepository.findAvailableBySectionAndMatch(
+        List<Seat> availableSeats = stadiumController.getAvailableSeatsBySectionAndMatch(
                 sectionId, matchId);
         if (availableSeats.isEmpty()) {
             System.out.println("[FAILED] No available seats in this section.");

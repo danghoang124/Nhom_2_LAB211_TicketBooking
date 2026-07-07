@@ -4,6 +4,7 @@ import controller.AdminController;
 import controller.BookingController;
 import controller.FanController;
 import controller.ReportController;
+import controller.StadiumController;
 import repository.*;
 
 /**
@@ -35,6 +36,7 @@ public class AppContext {
     private final FanController fanController;
     private final BookingController bookingController;
     private final ReportController reportController;
+    private final StadiumController stadiumController;
 
     // ── Constructor — wiring tất cả thành phần ─────────────────────────────────
     public AppContext() {
@@ -55,6 +57,8 @@ public class AppContext {
                 seatRepository, sectionRepository, ticketRepository, transactionRepository);
         this.reportController = new ReportController(ticketRepository, transactionRepository,
                                                       matchRepository, seatRepository, sectionRepository);
+        this.stadiumController = new StadiumController(
+                matchRepository, sectionRepository, seatRepository);
     }
 
     // ── Getters ────────────────────────────────────────────────────────────────
@@ -71,4 +75,5 @@ public class AppContext {
     public FanController getFanController() { return fanController; }
     public BookingController getBookingController() { return bookingController; }
     public ReportController getReportController() { return reportController; }
+    public StadiumController getStadiumController() { return stadiumController; }
 }
