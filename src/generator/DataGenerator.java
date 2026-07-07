@@ -96,7 +96,7 @@ public class DataGenerator {
 
     record Fan(String fanId, String username, String passwordHash,
             String fullName, String email, String phone,
-            String createdAt, boolean isActive) {
+            String createdAt, boolean isActive, String role) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ public class DataGenerator {
                     seats.stream().map(DataGenerator::seatToCsv).toList());
 
             writeCSV(DATA_DIR + "fans.csv",
-                    "fanId,username,passwordHash,fullName,email,phone,createdAt,isActive",
+                    "fanId,username,passwordHash,fullName,email,phone,createdAt,isActive,role",
                     fans.stream().map(DataGenerator::fanToCsv).toList());
 
             // Empty files — populated at runtime by BookingController / SimulatorController
@@ -310,7 +310,7 @@ public class DataGenerator {
 
             result.add(new Fan(
                     fmt("FAN%04d", i),
-                    username, pwHash, fullName, email, phone, created, true));
+                    username, pwHash, fullName, email, phone, created, true, "FAN"));
         }
         return result;
     }
@@ -340,7 +340,7 @@ public class DataGenerator {
 
     private static String fanToCsv(Fan f) {
         return joinCsv(f.fanId(), f.username(), f.passwordHash(), f.fullName(),
-                f.email(), f.phone(), f.createdAt(), f.isActive());
+                f.email(), f.phone(), f.createdAt(), f.isActive(), f.role());
     }
 
     /**

@@ -150,7 +150,7 @@ public class ModelTest {
     @Test
     public void testFanRoundTrip() {
         Fan f = new Fan("FAN0001", "anv", "HASH123ABC", "Nguyễn Văn An",
-                "anv@gmail.com", "0912345678", "2024-03-15 09:22:00", true);
+                "anv@gmail.com", "0912345678", "2024-03-15 09:22:00", true, Role.FAN);
         Fan f2 = Fan.fromCsvLine(f.toCsvLine());
 
         assertEquals("FAN0001", f2.getFanId());
@@ -277,7 +277,7 @@ public class ModelTest {
     @Test
     public void testQuotedField() {
         Fan f = new Fan("FAN0001", "user1", "HASH", "Nguyễn \"Quân\" Văn",
-                "user@email.com", "0912345678", "2024-01-01 00:00:00", true);
+                "user@email.com", "0912345678", "2024-01-01 00:00:00", true, Role.FAN);
         String csv = f.toCsvLine();
         Fan f2 = Fan.fromCsvLine(csv);
         assertEquals("Nguyễn \"Quân\" Văn", f2.getFullName());

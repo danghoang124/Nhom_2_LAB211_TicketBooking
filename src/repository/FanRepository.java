@@ -19,7 +19,7 @@ public class FanRepository extends CsvRepository<Fan> {
 
     private static final String FILE_PATH = "data/fans.csv";
     private static final String HEADER    =
-        "fanId,username,passwordHash,fullName,email,phone,createdAt,isActive";
+        "fanId,username,passwordHash,fullName,email,phone,createdAt,isActive,role";
 
     // ── Abstract method implementations ───────────────────────────────────────
 

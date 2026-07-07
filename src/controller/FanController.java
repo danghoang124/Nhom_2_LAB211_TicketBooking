@@ -4,6 +4,7 @@ import exception.InvalidCredentialsException;
 import exception.UserAlreadyExistsException;
 import model.entity.Fan;
 import model.entity.Ticket;
+import model.enums.Role;
 import repository.FanRepository;
 import repository.TicketRepository;
 
@@ -138,7 +139,8 @@ public class FanController {
                 email.trim(),
                 phone.trim(),
                 createdAt,
-                true  // isActive = true ngay khi tạo
+                true,  // isActive = true ngay khi tạo
+                Role.FAN
         );
 
         fanRepository.save(newFan);

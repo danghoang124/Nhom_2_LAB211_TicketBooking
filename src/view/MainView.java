@@ -6,6 +6,7 @@ import controller.ReportController;
 import controller.StadiumController;
 import main.AppContext;
 import model.entity.Fan;
+import model.enums.Role;
 import model.entity.Match;
 import model.entity.Seat;
 import model.entity.Section;
@@ -93,8 +94,7 @@ public class MainView {
 
     private boolean showMainMenu() {
         Fan currentFan = fanController.getCurrentFan();
-        boolean isAdmin = currentFan.getUsername() != null &&
-                currentFan.getUsername().toLowerCase().startsWith("admin");
+        boolean isAdmin = currentFan.getRole() == Role.ADMIN;
 
         while (true) {
             System.out.println("\n======================================");

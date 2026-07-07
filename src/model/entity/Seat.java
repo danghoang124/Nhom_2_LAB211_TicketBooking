@@ -116,11 +116,12 @@ public class Seat extends BaseEntity {
         return version;
     }
 
-    // Setters thô (dùng bởi Optimistic Locking khi cần đặt version cụ thể)
+    @Deprecated
     public void setStatus(SeatStatus status) {
         this.status = status;
     }
 
+    @Deprecated
     public void setVersion(int version) {
         this.version = version;
     }
