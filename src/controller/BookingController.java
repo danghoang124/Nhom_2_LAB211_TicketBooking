@@ -243,7 +243,6 @@ public class BookingController {
             // 1. Kiểm tra ghế tồn tại
             Optional<Seat> seatOpt = seatRepository.findById(seatId);
             if (!seatOpt.isPresent()) {
-                System.out.println("Seat not found: " + seatId);
                 createTransaction(transactionId, fanId, matchId, 1, totalAmount,
                         TransactionStatus.FAILED, mechanism, startTime);
                 return false;
@@ -285,7 +284,6 @@ public class BookingController {
             }
 
             if (!updateSuccess) {
-                System.out.println("Booking failed due to conflict (Double Booking prevented): " + seatId);
                 createTransaction(transactionId, fanId, matchId, 1, totalAmount,
                         TransactionStatus.FAILED, mechanism, startTime);
                 return false;
@@ -300,7 +298,6 @@ public class BookingController {
         } catch (SeatAlreadyBookedException e) {
             throw e; // re-throw để Simulator/caller xử lý
         } catch (Exception e) {
-            System.out.println("System error during booking: " + e.getMessage());
             createTransaction(transactionId, fanId, matchId, 1, totalAmount,
                     TransactionStatus.FAILED, mechanism, startTime);
             return false;
@@ -336,7 +333,6 @@ public class BookingController {
                     successCount++;
                 }
             } catch (SeatAlreadyBookedException e) {
-                System.out.println("[WARN] " + e.getMessage());
             }
         }
         return successCount;
@@ -355,7 +351,6 @@ public class BookingController {
     public boolean cancelBooking(String ticketId) {
         Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
         if (!ticketOpt.isPresent() || ticketOpt.get().isCancelled()) {
-            System.out.println("Ticket is invalid or already cancelled.");
             return false;
         }
         Ticket ticket = ticketOpt.get();

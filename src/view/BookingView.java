@@ -1,22 +1,26 @@
 package view;
 
 import controller.BookingController;
+import controller.FanController;
 import model.enums.LockMechanism;
 import java.util.Scanner;
 
 public class BookingView {
     private final BookingController bookingController;
+    private final FanController fanController;
     private final Scanner scanner;
 
     /**
      * Khởi tạo BookingView.
      *
      * @param bookingController Controller xử lý booking logic.
+     * @param fanController     Controller quản lý fan — lấy currentFan từ session.
      * @param scanner           Scanner dùng chung — nhận từ ngoài, không tự tạo mới
      *                          để tránh tạo nhiều Scanner cùng đọc System.in.
      */
-    public BookingView(BookingController bookingController, Scanner scanner) {
+    public BookingView(BookingController bookingController, FanController fanController, Scanner scanner) {
         this.bookingController = bookingController;
+        this.fanController = fanController;
         this.scanner = scanner;
     }
 
@@ -46,17 +50,16 @@ public class BookingView {
 
     private void handleBooking() {
         System.out.println("\n--- THỰC HIỆN ĐẶT VÉ ---");
-        System.out.print("Nhập mã Fan (Fan ID): ");
-        String fanId = scanner.nextLine();
-        
+
+        String fanId = fanController.getCurrentFan().getFanId();
+
         System.out.print("Nhập mã Trận đấu (Match ID): ");
         String matchId = scanner.nextLine();
         
         System.out.print("Nhập mã Ghế (Seat ID): ");
         String seatId = scanner.nextLine();
-        
-        // Trong hệ thống thật, cơ chế Lock có thể được cài đặt sẵn hoặc lựa chọn
-        LockMechanism mechanism = LockMechanism.NO_LOCK; // Default cho demo cơ bản
+
+        LockMechanism mechanism = chooseMechanism();
 
         boolean result = bookingController.bookSeat(fanId, matchId, seatId, mechanism);
         
@@ -81,6 +84,22 @@ public class BookingView {
             System.out.println("--> Hủy vé THÀNH CÔNG! Ghế đã được trống.");
         } else {
             System.out.println("--> Hủy vé THẤT BẠI! Không tìm thấy vé hoặc vé đã bị hủy.");
+        }
+    }
+
+    private LockMechanism chooseMechanism() {
+        System.out.println("\nChọn cơ chế đồng bộ:");
+        System.out.println("  1. NO_LOCK      — không khóa (dễ Double Booking)");
+        System.out.println("  2. SYNCHRONIZED — synchronized block");
+        System.out.println("  3. FILE_LOCK    — Java NIO FileLock");
+        System.out.println("  4. OPTIMISTIC   — version-based lock");
+        System.out.print("Chọn (1-4, mặc định 1): ");
+        String choice = scanner.nextLine().trim();
+        switch (choice) {
+            case "2": return LockMechanism.SYNCHRONIZED;
+            case "3": return LockMechanism.FILE_LOCK;
+            case "4": return LockMechanism.OPTIMISTIC;
+            default:  return LockMechanism.NO_LOCK;
         }
     }
 }

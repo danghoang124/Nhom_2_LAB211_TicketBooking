@@ -6,8 +6,8 @@ package model.enums;
  * <ul>
  *   <li>{@code VIP}           — khu VIP, giá cao nhất (500,000 VND).</li>
  *   <li>{@code STANDARD}      — khu thường (200,000 VND).</li>
- *   <li>{@code STANDING}      — khu đứng (80,000 VND).</li>
- *   <li>{@code ECONOMY_LOWER} — khu phổ thông thấp (100,000 VND).</li>
+ *   <li>{@code STANDING}      — khu đứng (100,000 VND).</li>
+ *   <li>{@code ECONOMY_LOWER} — khu phổ thông thấp (80,000 VND).</li>
  * </ul>
  */
 public enum SectionType {

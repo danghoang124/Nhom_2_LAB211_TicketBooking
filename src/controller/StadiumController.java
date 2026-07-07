@@ -96,8 +96,8 @@ public class StadiumController {
      * Hệ thống có 4 khán đài dùng chung cho tất cả sân vận động:
      *   SEC001 - VIP       : 10 hàng × 20 ghế = 200 ghế  (500,000đ/vé)
      *   SEC002 - STANDARD  : 20 hàng × 30 ghế = 600 ghế  (200,000đ/vé)
-     *   SEC003 - STANDING  : 25 hàng × 35 ghế = 875 ghế  ( 80,000đ/vé)
-     *   SEC004 - ECONOMY   : 25 hàng × 35 ghế = 875 ghế  (100,000đ/vé)
+     *   SEC003 - STANDING      : 25 hàng × 35 ghế = 875 ghế  (100,000đ/vé)
+     *   SEC004 - ECONOMY_LOWER : 25 hàng × 35 ghế = 875 ghế  ( 80,000đ/vé)
      *
      * Flow:
      *   View gọi getSections()

@@ -44,7 +44,7 @@ public class MainView {
 
         this.loginView = new LoginView(fanController, scanner);
         this.registerView = new RegisterView(fanController, scanner);
-        this.bookingView = new BookingView(bookingController, scanner);
+        this.bookingView = new BookingView(bookingController, fanController, scanner);
         this.reportView = new ReportView(reportController, scanner);
         this.adminView = new AdminView(appContext.getAdminController(), scanner);
     }
