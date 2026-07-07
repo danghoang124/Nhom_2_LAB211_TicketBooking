@@ -11,24 +11,19 @@ import java.util.List;
  * ============================================================
  * SEAT MAP VIEW — Tuần 6 (View Layer)
  * ============================================================
- *
  * Nhiệm vụ: Hiển thị sơ đồ ghế ngồi dạng ASCII lên console.
- *
  * Trách nhiệm của View (theo MVC):
  *   ✔ Nhận dữ liệu đã xử lý từ Controller (Seat[][], Section, ...).
  *   ✔ Định dạng và in dữ liệu ra màn hình.
  *   ✔ Nhận input từ người dùng (chọn trận, chọn khán đài).
  *   ✗ KHÔNG đọc/ghi file CSV.
  *   ✗ KHÔNG chứa logic nghiệp vụ (tính tiền, kiểm tra ghế...).
- *
  * Ký hiệu ghế trong ASCII Seat Map:
  *   [ ]  → AVAILABLE (còn trống, có thể đặt)
  *   [X]  → BOOKED    (đã bán, không thể đặt)
  *   [L]  → LOCKED    (đang xử lý giao dịch khác)
  *   [.]  → null (ô không có ghế trong dữ liệu)
- *
  * Ví dụ hiển thị (Section VIP, 3 hàng × 4 ghế):
- *
  *   +------------------+
  *   |  HƯỚNG SÂN BÓNG  |
  *   +------------------+
@@ -51,7 +46,6 @@ public class SeatMapView {
 
     /**
      * Hiển thị danh sách trận đấu để người dùng chọn.
-     *
      * Ví dụ output:
      *   === DANH SÁCH TRẬN ĐẤU ===
      *   [1] MATCH001 | Hà Nội FC vs Hoàng Anh Gia Lai | 2025-01-22 16:00
