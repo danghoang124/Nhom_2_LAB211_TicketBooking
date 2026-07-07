@@ -347,11 +347,27 @@ public class MainView {
             return;
         }
 
+        // ── Cho user chọn cơ chế đồng bộ ─────────────────────────────────────
+        System.out.println("\nChoose synchronization mechanism:");
+        System.out.println("  1. SYNCHRONIZED (JVM lock — default, safe)");
+        System.out.println("  2. FILE_LOCK    (OS-level lock)");
+        System.out.println("  3. OPTIMISTIC   (Version-based, retry on conflict)");
+        System.out.println("  4. NO_LOCK      (No locking — unsafe, for testing only)");
+        System.out.print("Select (1-4, default 1): ");
+        String mechChoice = scanner.nextLine().trim();
+        LockMechanism mechanism;
+        switch (mechChoice) {
+            case "2": mechanism = LockMechanism.FILE_LOCK;    break;
+            case "3": mechanism = LockMechanism.OPTIMISTIC;   break;
+            case "4": mechanism = LockMechanism.NO_LOCK;      break;
+            default:  mechanism = LockMechanism.SYNCHRONIZED; break;
+        }
+
         // ── Bước 2a: CONFIRM → BOOKED ────────────────────────────────────────
         boolean success = false;
         try {
             success = bookingController.confirmBooking(
-                    currentFan.getFanId(), matchId, seatId, LockMechanism.NO_LOCK);
+                    currentFan.getFanId(), matchId, seatId, mechanism);
         } catch (exception.SeatAlreadyBookedException e) {
             System.out.println("[FAILED] " + e.getMessage());
             return;

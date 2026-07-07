@@ -53,14 +53,14 @@ public class LoginView {
      * @return {@code true} nếu đăng nhập thành công.
      */
     public boolean show() {
-        final int MAX_ATTEMPTS = 3;
+        final int maxAttempts = FanController.MAX_LOGIN_ATTEMPTS;
 
         printDivider();
         System.out.println("           ĐĂNG NHẬP HỆ THỐNG");
         printDivider();
 
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            System.out.printf("%n[Lần thử %d/%d]%n", attempt, MAX_ATTEMPTS);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            System.out.printf("%n[Lần thử %d/%d]%n", attempt, maxAttempts);
 
             // ── Nhận input từ người dùng ──────────────────────────────────
             System.out.print("  Tên đăng nhập : ");
@@ -91,15 +91,15 @@ public class LoginView {
                 String msg = (errorMessage != null) ? errorMessage
                         : "Tên đăng nhập hoặc mật khẩu không đúng.";
                 System.out.println("  ✗ " + msg);
-                if (attempt < MAX_ATTEMPTS) {
-                    System.out.printf("  Còn %d lần thử.%n", MAX_ATTEMPTS - attempt);
+                if (attempt < maxAttempts) {
+                    System.out.printf("  Còn %d lần thử.%n", maxAttempts - attempt);
                 }
             }
         }
 
         // Hết lần thử
         System.out.println();
-        System.out.println("  ✗ Đăng nhập thất bại sau " + MAX_ATTEMPTS + " lần thử.");
+        System.out.println("  ✗ Đăng nhập thất bại sau " + maxAttempts + " lần thử.");
         System.out.println("  Vui lòng thử lại sau hoặc đăng ký tài khoản mới.");
         printDivider();
         return false;

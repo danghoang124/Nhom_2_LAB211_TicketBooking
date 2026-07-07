@@ -8,6 +8,7 @@ import model.enums.LockMechanism;
 import model.enums.SeatStatus;
 import model.enums.TicketStatus;
 import model.enums.TransactionStatus;
+import repository.MatchRepository;
 import repository.SeatRepository;
 import repository.SectionRepository;
 import repository.TicketRepository;
@@ -26,6 +27,7 @@ public class BookingTest {
     private SectionRepository sectionRepo;
     private TicketRepository ticketRepo;
     private TransactionRepository transactionRepo;
+    private MatchRepository matchRepo;
     private BookingController controller;
 
     @BeforeEach
@@ -44,13 +46,14 @@ public class BookingTest {
         transactionRepo = new TransactionRepository() {
             @Override public String getFilePath() { return "data/test_transactions.csv"; }
         };
+        matchRepo = new MatchRepository();
 
         // Dọn dẹp dữ liệu cũ (nếu có)
         new File("data/test_seats.csv").delete();
         new File("data/test_tickets.csv").delete();
         new File("data/test_transactions.csv").delete();
 
-        controller = new BookingController(seatRepo, sectionRepo, ticketRepo, transactionRepo);
+        controller = new BookingController(seatRepo, sectionRepo, ticketRepo, transactionRepo, matchRepo);
     }
 
     @Test

@@ -319,14 +319,25 @@ public class BookingController {
     }
 
     /**
-     * Đặt nhiều ghế cùng lúc — kiểm tra giới hạn số vé.
+     * Đặt nhiều ghế cùng lúc — tối đa {@value #MAX_TICKETS_PER_TRANSACTION} vé/giao dịch.
+     *
+     * <p><b>Thiết kế 1 transaction cho N vé:</b> Một {@code transactionId} duy nhất được
+     * sinh ra trước khi vòng lặp bắt đầu. Tất cả {@link model.entity.Ticket} tạo ra bên
+     * trong vòng lặp đều gắn cùng {@code transactionId} đó. Cuối cùng chỉ có
+     * <b>1 bản ghi {@link model.entity.BookingTransaction}</b> được ghi vào CSV, phản ánh
+     * kết quả toàn bộ giao dịch:
+     * <ul>
+     *   <li>{@link TransactionStatus#SUCCESS}  — tất cả ghế đặt thành công.</li>
+     *   <li>{@link TransactionStatus#PARTIAL}  — một phần ghế thành công (1 ≤ success &lt; total).</li>
+     *   <li>{@link TransactionStatus#FAILED}   — không đặt được ghế nào.</li>
+     * </ul>
      *
      * @param fanId     ID fan.
      * @param matchId   ID trận đấu.
-     * @param seatIds   Danh sách seat ID cần đặt (tối đa 4).
+     * @param seatIds   Danh sách seat ID cần đặt (1–{@value #MAX_TICKETS_PER_TRANSACTION} ghế).
      * @param mechanism Cơ chế đồng bộ.
      * @return Số ghế đặt thành công.
-     * @throws BookingLimitExceededException nếu seatIds.size() &gt; 4 hoặc rỗng.
+     * @throws BookingLimitExceededException nếu seatIds rỗng hoặc vượt quá giới hạn.
      */
     public int bookMultipleSeats(String fanId, String matchId,
                                   List<String> seatIds, LockMechanism mechanism) {

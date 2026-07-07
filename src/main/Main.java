@@ -1,7 +1,7 @@
 package main;
 
 import java.util.Scanner;
-import repository.*;
+import main.AppContext;
 import view.MainView;
 
 public class Main {
@@ -61,7 +61,7 @@ public class Main {
                     System.out.println("\n[INFO] Starting Simulator...");
                     try {
                         AppContext appCtx = new AppContext();
-                        view.SimulatorView simView = new view.SimulatorView(appCtx.getSimulatorController());
+                        view.SimulatorView simView = new view.SimulatorView(appCtx.getSimulatorController(), scanner);
                         simView.start();
                     } catch (Exception e) {
                         System.err.println("Error running Simulator: " + e.getMessage());
@@ -85,17 +85,12 @@ public class Main {
     private static void displaySystemInfo() {
         System.out.println("\n--- CURRENT SYSTEM CONFIGURATION ---");
         try {
-            StadiumRepository stadiumRepo = new StadiumRepository();
-            SectionRepository sectionRepo = new SectionRepository();
-            MatchRepository matchRepo = new MatchRepository();
-            SeatRepository seatRepo = new SeatRepository();
-            FanRepository fanRepo = new FanRepository();
-
-            System.out.printf("- Stadium count: %d%n", stadiumRepo.count());
-            System.out.printf("- Section count: %d%n", sectionRepo.count());
-            System.out.printf("- Match count: %d%n", matchRepo.count());
-            System.out.printf("- Total Seats: %d%n", seatRepo.count());
-            System.out.printf("- Fan count: %d%n", fanRepo.count());
+            AppContext ctx = new AppContext();
+            System.out.printf("- Stadium count: %d%n", ctx.getStadiumRepository().count());
+            System.out.printf("- Section count: %d%n", ctx.getSectionRepository().count());
+            System.out.printf("- Match count: %d%n", ctx.getMatchRepository().count());
+            System.out.printf("- Total Seats: %d%n", ctx.getSeatRepository().count());
+            System.out.printf("- Fan count: %d%n", ctx.getFanRepository().count());
         } catch (Exception e) {
             System.out.println(
                     "[WARNING] Cannot read system configuration. Please select option (1) to generate CSV data first!");

@@ -45,6 +45,9 @@ public class FanController {
     private static final DateTimeFormatter DATETIME_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /** Số lần đăng nhập tối đa — policy do Controller quyết định, View chỉ hiển thị. */
+    public static final int MAX_LOGIN_ATTEMPTS = 3;
+
     // ── Constructor ───────────────────────────────────────────────────────────
 
     /**
