@@ -1,5 +1,6 @@
 package main;
 
+import controller.AdminController;
 import controller.BookingController;
 import controller.FanController;
 import controller.ReportController;
@@ -29,7 +30,8 @@ public class AppContext {
     private final TicketRepository ticketRepository;
     private final TransactionRepository transactionRepository;
 
-    // ── Controllers ────────────────────────────────────────────────────────────
+    // ── Controllers ──────────────────────────────────────────────
+    private final AdminController adminController;
     private final FanController fanController;
     private final BookingController bookingController;
     private final ReportController reportController;
@@ -46,6 +48,8 @@ public class AppContext {
         this.transactionRepository = new TransactionRepository();
 
         // 2. Khởi tạo Controllers (inject dependencies)
+        this.adminController = new AdminController(
+                stadiumRepository, sectionRepository, matchRepository);
         this.fanController = new FanController(fanRepository, ticketRepository);
         this.bookingController = new BookingController(
                 seatRepository, sectionRepository, ticketRepository, transactionRepository);
@@ -63,6 +67,7 @@ public class AppContext {
     public TicketRepository getTicketRepository() { return ticketRepository; }
     public TransactionRepository getTransactionRepository() { return transactionRepository; }
 
+    public AdminController getAdminController() { return adminController; }
     public FanController getFanController() { return fanController; }
     public BookingController getBookingController() { return bookingController; }
     public ReportController getReportController() { return reportController; }

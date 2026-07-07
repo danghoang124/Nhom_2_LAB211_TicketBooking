@@ -1,5 +1,7 @@
 package controller;
 
+import exception.InvalidCredentialsException;
+import exception.UserAlreadyExistsException;
 import model.entity.Fan;
 import model.entity.Ticket;
 import repository.FanRepository;
@@ -105,11 +107,15 @@ public class FanController {
         }
 
         // ── Bước 3: Kiểm tra username và email đã tồn tại chưa ────────────
+        // Ném UserAlreadyExistsException (thay vì return fail) để caller
+        // biết đây là lỗi nghiệp vụ rõ ràng — không phải lỗi validation thông thường.
         if (fanRepository.isUsernameTaken(username.trim())) {
-            return RegisterResult.fail("Tên đăng nhập '" + username.trim() + "' đã được sử dụng.");
+            throw new UserAlreadyExistsException(
+                "Tên đăng nhập '" + username.trim() + "' đã được sử dụng.");
         }
         if (fanRepository.isEmailTaken(email.trim())) {
-            return RegisterResult.fail("Email '" + email.trim() + "' đã được đăng ký.");
+            throw new UserAlreadyExistsException(
+                "Email '" + email.trim() + "' đã được đăng ký bởi tài khoản khác.");
         }
 
         // ── Bước 4: Hash mật khẩu SHA-256 ─────────────────────────────────
@@ -166,7 +172,7 @@ public class FanController {
      * @return {@code true} nếu đăng nhập thành công.
      */
     public boolean login(String username, String password) {
-        // Validate input
+        // Validate input cơ bản — không throw exception cho trường hợp rỗng
         if (isBlank(username) || isBlank(password)) return false;
 
         // Hash mật khẩu trước khi gửi xuống repository
@@ -180,7 +186,11 @@ public class FanController {
             currentFan = result.get();  // Lưu session
             return true;
         }
-        return false;
+
+        // Ném InvalidCredentialsException thay vì return false.
+        // Giúp View phân biệt "thông tin sai" với "lỗi hệ thống".
+        throw new InvalidCredentialsException(
+            "Tên đăng nhập hoặc mật khẩu không đúng.");
     }
 
     // ═════════════════════════════════════════════════════════════════════════

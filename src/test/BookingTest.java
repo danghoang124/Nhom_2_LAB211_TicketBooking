@@ -76,11 +76,10 @@ public class BookingTest {
         Seat seat = new Seat("SEAT02", "SEC01", "MATCH01", "A", 2, SeatStatus.BOOKED, 1);
         seatRepo.save(seat);
 
-        // Act
-        boolean result = controller.bookSeat("FAN01", "MATCH01", "SEAT02", LockMechanism.NO_LOCK);
-
-        // Assert
-        assertFalse(result, "Ghế đã đặt rồi không thể đặt thêm, trả về false");
+        // Act & Assert
+        assertThrows(exception.SeatAlreadyBookedException.class, () -> {
+            controller.bookSeat("FAN01", "MATCH01", "SEAT02", LockMechanism.NO_LOCK);
+        });
         assertEquals(1, transactionRepo.count(), "Phải có 1 Transaction FAILED sinh ra");
         BookingTransaction txn = transactionRepo.findAll().get(0);
         assertEquals(TransactionStatus.FAILED, txn.getStatus(), "Transaction ghi nhận FAILED");

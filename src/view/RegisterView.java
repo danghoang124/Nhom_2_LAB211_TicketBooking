@@ -2,6 +2,7 @@ package view;
 
 import controller.FanController;
 import controller.FanController.RegisterResult;
+import exception.UserAlreadyExistsException;
 import model.entity.Ticket;
 
 import java.util.List;
@@ -76,10 +77,19 @@ public class RegisterView {
         System.out.println();
 
         // ── Gọi Controller xử lý ─────────────────────────────────────────
-        RegisterResult result = fanController.register(username, password, fullName, email, phone);
+        RegisterResult result = null;
+        try {
+            result = fanController.register(username, password, fullName, email, phone);
+        } catch (UserAlreadyExistsException e) {
+            // Username hoặc email trùng — hiển thị thông báo rõ ràng
+            printDivider();
+            System.out.println("  ✗ Đăng ký thất bại: " + e.getMessage());
+            printDivider();
+            return false;
+        }
 
         // ── Hiển thị kết quả ─────────────────────────────────────────────
-        if (result.isSuccess()) {
+        if (result != null && result.isSuccess()) {
             printDivider();
             System.out.println("  ✓ " + result.getMessage());
             System.out.printf("  ID của bạn: %s%n", result.getFan().getFanId());
@@ -96,7 +106,8 @@ public class RegisterView {
 
         } else {
             printDivider();
-            System.out.println("  ✗ Đăng ký thất bại: " + result.getMessage());
+            String msg = (result != null) ? result.getMessage() : "Lỗi không xác định.";
+            System.out.println("  ✗ Đăng ký thất bại: " + msg);
             printDivider();
             return false;
         }

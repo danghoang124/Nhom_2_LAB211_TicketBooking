@@ -1,6 +1,7 @@
 package view;
 
 import controller.FanController;
+import exception.InvalidCredentialsException;
 import model.entity.Fan;
 
 import java.util.Scanner;
@@ -68,10 +69,16 @@ public class LoginView {
             System.out.print("  Mật khẩu      : ");
             String password = scanner.nextLine();
 
-            // ── Gọi Controller xử lý ─────────────────────────────────────
-            boolean success = fanController.login(username, password);
+            // ── Gọi Controller xử lý ─────────────────────────────────────────────
+            boolean success = false;
+            String errorMessage = null;
+            try {
+                success = fanController.login(username, password);
+            } catch (InvalidCredentialsException e) {
+                errorMessage = e.getMessage();
+            }
 
-            // ── Hiển thị kết quả ─────────────────────────────────────────
+            // ── Hiển thị kết quả ─────────────────────────────────────────────
             if (success) {
                 Fan fan = fanController.getCurrentFan();
                 System.out.println();
@@ -81,7 +88,9 @@ public class LoginView {
                 printDivider();
                 return true;
             } else {
-                System.out.println("  ✗ Tên đăng nhập hoặc mật khẩu không đúng.");
+                String msg = (errorMessage != null) ? errorMessage
+                        : "Tên đăng nhập hoặc mật khẩu không đúng.";
+                System.out.println("  ✗ " + msg);
                 if (attempt < MAX_ATTEMPTS) {
                     System.out.printf("  Còn %d lần thử.%n", MAX_ATTEMPTS - attempt);
                 }

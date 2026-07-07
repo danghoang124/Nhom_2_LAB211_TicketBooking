@@ -37,6 +37,7 @@ public class MainView {
     private final RegisterView registerView;
     private final BookingView bookingView;
     private final ReportView reportView;
+    private final AdminView adminView;
 
     public MainView(AppContext appContext) {
         this.appContext = appContext;
@@ -52,8 +53,9 @@ public class MainView {
 
         this.loginView = new LoginView(fanController, scanner);
         this.registerView = new RegisterView(fanController, scanner);
-        this.bookingView = new BookingView(bookingController);
+        this.bookingView = new BookingView(bookingController, scanner);
         this.reportView = new ReportView(reportController, scanner);
+        this.adminView = new AdminView(appContext.getAdminController(), scanner);
     }
 
     public void start() {
@@ -98,6 +100,8 @@ public class MainView {
 
     private boolean showMainMenu() {
         Fan currentFan = fanController.getCurrentFan();
+        boolean isAdmin = currentFan.getUsername() != null && 
+                          currentFan.getUsername().toLowerCase().startsWith("admin");
 
         while (true) {
             System.out.println("\n======================================");
@@ -108,7 +112,10 @@ public class MainView {
             System.out.println("  3. Book a ticket                    ");
             System.out.println("  4. View my tickets                  ");
             System.out.println("  5. Reports & Statistics             ");
-            System.out.println("  6. Logout                           ");
+            if (isAdmin) {
+                System.out.println("  6. Admin Panel (CRUD)               ");
+            }
+            System.out.println("  7. Logout                           ");
             System.out.println("======================================");
             System.out.print("Select an option: ");
 
@@ -130,9 +137,16 @@ public class MainView {
                     reportView.displayMenu(currentFan.getFanId());
                     break;
                 case "6":
+                    if (isAdmin) {
+                        adminView.start();
+                    } else {
+                        System.out.println("Invalid option. Please try again.");
+                    }
+                    break;
+                case "7":
                     fanController.logout();
                     System.out.println("[SUCCESS] Logged out successfully!");
-                    return true; 
+                    return true;
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
@@ -277,23 +291,67 @@ public class MainView {
         System.out.print("\nEnter Seat ID (e.g. SEAT000001): ");
         String seatId = scanner.nextLine().trim();
 
-        System.out.printf("Confirm booking? Fan: %s | Match: %s | Seat: %s (y/n): ",
-                currentFan.getFullName(), matchId, seatId);
-        String confirm = scanner.nextLine().trim().toLowerCase();
-        if (!"y".equals(confirm)) {
-            System.out.println("Booking cancelled.");
+        if (seatId.toUpperCase().startsWith("SEC")) {
+            System.out.println("[FAILED] Bạn đã nhập Mã Khu Vực (Section ID) '" + seatId + "' thay vì Mã Ghế (Seat ID).");
+            System.out.println("[TIP] Mã ghế hợp lệ có định dạng như SEATxxxxxx (Ví dụ: SEAT000201).");
+            System.out.println("      Bạn có thể chọn '2. View seat map by match' từ Menu chính để xem các Mã Ghế trống.");
             return;
         }
 
-        boolean success = bookingController.bookSeat(currentFan.getFanId(), matchId, seatId, LockMechanism.NO_LOCK);
+        // ── Bước 1: LOCK ghế trước khi xác nhận ─────────────────────────────
+        boolean locked = false;
+        try {
+            locked = bookingController.lockSeat(seatId);
+        } catch (exception.SeatAlreadyBookedException e) {
+            System.out.println("[FAILED] " + e.getMessage());
+            return;
+        }
+
+        if (!locked) {
+            System.out.println("[FAILED] Seat not found or unavailable: " + seatId);
+            return;
+        }
+
+        // Lấy giá vé để hiển thị trước khi confirm
+        long price = bookingController.getPriceForSeat(seatId);
+
+        // ── Hiển thị thông tin xác nhận ──────────────────────────────────────
+        System.out.println("\n======================================");
+        System.out.println("       BOOKING CONFIRMATION           ");
+        System.out.println("======================================");
+        System.out.printf("  Fan    : %s%n", currentFan.getFullName());
+        System.out.printf("  Match  : %s%n", matchId);
+        System.out.printf("  Seat   : %s  [LOCKED - Held for you]%n", seatId);
+        System.out.printf("  Price  : %,d VND%n", price);
+        System.out.println("======================================");
+        System.out.print("Confirm booking? (y/n): ");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+
+        if (!"y".equals(confirm)) {
+            // ── Bước 2b: User cancel → restore AVAILABLE ─────────────────────
+            bookingController.cancelLockedSeat(seatId);
+            System.out.println("[INFO] Booking cancelled. Seat " + seatId + " released.");
+            return;
+        }
+
+        // ── Bước 2a: CONFIRM → BOOKED ────────────────────────────────────────
+        boolean success = false;
+        try {
+            success = bookingController.confirmBooking(
+                    currentFan.getFanId(), matchId, seatId, LockMechanism.NO_LOCK);
+        } catch (exception.SeatAlreadyBookedException e) {
+            System.out.println("[FAILED] " + e.getMessage());
+            return;
+        }
 
         if (success) {
             System.out.println("======================================");
             System.out.println("     [SUCCESS] TICKET BOOKED!         ");
             System.out.println("======================================");
-            System.out.printf("  Fan: %s%n  Match: %s%n  Seat: %s%n", currentFan.getFullName(), matchId, seatId);
+            System.out.printf("  Fan: %s%n  Match: %s%n  Seat: %s%n  Price: %,d VND%n",
+                    currentFan.getFullName(), matchId, seatId, price);
         } else {
-            System.out.println("[FAILED] Booking failed! Seat is already booked or does not exist.");
+            System.out.println("[FAILED] Booking failed. Please try again.");
         }
     }
 

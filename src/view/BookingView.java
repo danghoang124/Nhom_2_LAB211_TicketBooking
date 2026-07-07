@@ -8,9 +8,16 @@ public class BookingView {
     private final BookingController bookingController;
     private final Scanner scanner;
 
-    public BookingView(BookingController bookingController) {
+    /**
+     * Khởi tạo BookingView.
+     *
+     * @param bookingController Controller xử lý booking logic.
+     * @param scanner           Scanner dùng chung — nhận từ ngoài, không tự tạo mới
+     *                          để tránh tạo nhiều Scanner cùng đọc System.in.
+     */
+    public BookingView(BookingController bookingController, Scanner scanner) {
         this.bookingController = bookingController;
-        this.scanner = new Scanner(System.in);
+        this.scanner = scanner;
     }
 
     public void displayMenu() {

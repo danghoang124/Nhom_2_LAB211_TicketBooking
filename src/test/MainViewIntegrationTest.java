@@ -91,11 +91,10 @@ public class MainViewIntegrationTest {
     @Test @Order(2)
     @DisplayName("1b. Đăng ký trùng username → thất bại")
     void testRegisterDuplicateUsername() {
-        FanController.RegisterResult result = fanController.register(
-                TEST_USERNAME, "other123", "Another Name", "other@test.com", "0911111111");
-
-        assertFalse(result.isSuccess(), "Đăng ký trùng username phải thất bại");
-        System.out.println("[PASS] Đăng ký trùng username bị từ chối: " + result.getMessage());
+        assertThrows(exception.UserAlreadyExistsException.class, () -> {
+            fanController.register(TEST_USERNAME, "other123", "Another Name", "other@test.com", "0911111111");
+        });
+        System.out.println("[PASS] Đăng ký trùng username bị từ chối với UserAlreadyExistsException");
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -120,18 +119,20 @@ public class MainViewIntegrationTest {
     @DisplayName("2b. Đăng nhập sai password → thất bại")
     void testLoginWrongPassword() {
         fanController.logout();
-        boolean success = fanController.login(TEST_USERNAME, "wrongpassword");
-        assertFalse(success, "Đăng nhập sai password phải thất bại");
+        assertThrows(exception.InvalidCredentialsException.class, () -> {
+            fanController.login(TEST_USERNAME, "wrongpassword");
+        });
         assertFalse(fanController.isLoggedIn());
-        System.out.println("[PASS] Đăng nhập sai password bị từ chối");
+        System.out.println("[PASS] Đăng nhập sai password bị từ chối với InvalidCredentialsException");
     }
 
     @Test @Order(5)
     @DisplayName("2c. Đăng nhập username không tồn tại → thất bại")
     void testLoginNonExistentUser() {
-        boolean success = fanController.login("nonexistent_user_xyz", "any");
-        assertFalse(success, "Đăng nhập user không tồn tại phải thất bại");
-        System.out.println("[PASS] Đăng nhập user không tồn tại bị từ chối");
+        assertThrows(exception.InvalidCredentialsException.class, () -> {
+            fanController.login("nonexistent_user_xyz", "any");
+        });
+        System.out.println("[PASS] Đăng nhập user không tồn tại bị từ chối với InvalidCredentialsException");
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -200,9 +201,10 @@ public class MainViewIntegrationTest {
     @DisplayName("4b. Đặt vé trùng ghế → thất bại (chống Double Booking)")
     void testDoubleBookingFail() {
         String fanId = fanController.getCurrentFan().getFanId();
-        boolean result = bookingController.bookSeat(fanId, testMatchId, testSeatId, LockMechanism.NO_LOCK);
-        assertFalse(result, "Đặt vé trùng ghế phải thất bại");
-        System.out.println("[PASS] Double booking bị chặn thành công");
+        assertThrows(exception.SeatAlreadyBookedException.class, () -> {
+            bookingController.bookSeat(fanId, testMatchId, testSeatId, LockMechanism.NO_LOCK);
+        });
+        System.out.println("[PASS] Double booking bị chặn với SeatAlreadyBookedException");
     }
 
     // ════════════════════════════════════════════════════════════════════════
