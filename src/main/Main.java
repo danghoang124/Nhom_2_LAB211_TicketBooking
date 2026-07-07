@@ -50,7 +50,7 @@ public class Main {
                     System.out.println("\n[INFO] Initializing Ticket System...");
                     try {
                         AppContext appContext = new AppContext();
-                        MainView mainView = new MainView(appContext);
+                        MainView mainView = new MainView(appContext, scanner);
                         mainView.start();
                     } catch (Exception e) {
                         System.err.println("Error starting Ticket System: " + e.getMessage());

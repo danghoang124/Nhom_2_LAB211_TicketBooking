@@ -33,9 +33,9 @@ public class MainView {
     private final ReportView reportView;
     private final AdminView adminView;
 
-    public MainView(AppContext appContext) {
+    public MainView(AppContext appContext, Scanner scanner) {
         this.appContext = appContext;
-        this.scanner = new Scanner(System.in);
+        this.scanner = scanner;
 
         this.fanController = appContext.getFanController();
         this.bookingController = appContext.getBookingController();
@@ -370,10 +370,10 @@ public class MainView {
 
     private void showMyTickets() {
         Fan currentFan = fanController.getCurrentFan();
-        List<Ticket> tickets = fanController.getMyValidTickets();
+        List<Ticket> tickets = fanController.getMyTickets();
 
         System.out.println("\n======================================");
-        System.out.println("       MY TICKET HISTORY              ");
+        System.out.println("       MY TICKET HISTORY (ALL)        ");
         System.out.println("======================================");
 
         if (tickets.isEmpty()) {

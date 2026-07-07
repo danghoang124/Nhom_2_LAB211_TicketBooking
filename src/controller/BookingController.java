@@ -340,15 +340,67 @@ public class BookingController {
                 + " vé trong một giao dịch. Bạn đã chọn " + seatIds.size() + " ghế.");
         }
 
+        long startTime = System.currentTimeMillis();
+        String transactionId = generateTransactionId();
         int successCount = 0;
+        long totalAmount = 0;
+
         for (String seatId : seatIds) {
             try {
-                if (bookSeat(fanId, matchId, seatId, mechanism)) {
-                    successCount++;
+                Optional<Seat> seatOpt = seatRepository.findById(seatId);
+                if (!seatOpt.isPresent()) continue;
+                Seat seat = seatOpt.get();
+
+                Optional<Section> sectionOpt = sectionRepository.findById(seat.getSectionId());
+                long price = sectionOpt.map(Section::getBasePrice).orElse(DEFAULT_PRICE);
+
+                Optional<Match> matchOpt = matchRepository.findById(matchId);
+                if (matchOpt.isPresent() && matchOpt.get().getStatus() != MatchStatus.SCHEDULED) continue;
+
+                if (seat.getStatus() == SeatStatus.BOOKED
+                        || ticketRepository.existsBySeatAndMatch(seatId, matchId)) continue;
+
+                boolean updateSuccess = false;
+                switch (mechanism) {
+                    case NO_LOCK:
+                        seat.updateStatus(SeatStatus.BOOKED);
+                        seatRepository.save(seat);
+                        updateSuccess = true;
+                        break;
+                    case SYNCHRONIZED:
+                        updateSuccess = seatRepository.updateStatusSynchronized(seatId, SeatStatus.BOOKED);
+                        break;
+                    case FILE_LOCK:
+                        updateSuccess = seatRepository.updateStatusFileLock(seatId, SeatStatus.BOOKED);
+                        break;
+                    case OPTIMISTIC:
+                        updateSuccess = seatRepository.updateStatusOptimistic(seatId, SeatStatus.BOOKED, seat.getVersion());
+                        break;
                 }
-            } catch (SeatAlreadyBookedException e) {
+
+                if (!updateSuccess) continue;
+
+                createTicket(fanId, matchId, seatId, transactionId, price);
+                successCount++;
+                totalAmount += price;
+
+            } catch (Exception e) {
+                // skip failed seat, continue with next
             }
         }
+
+        TransactionStatus status;
+        if (successCount == seatIds.size()) {
+            status = TransactionStatus.SUCCESS;
+        } else if (successCount > 0) {
+            status = TransactionStatus.PARTIAL;
+        } else {
+            status = TransactionStatus.FAILED;
+        }
+
+        createTransaction(transactionId, fanId, matchId, successCount, totalAmount,
+                status, mechanism, startTime);
+
         return successCount;
     }
 
