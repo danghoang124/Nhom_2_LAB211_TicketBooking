@@ -291,7 +291,22 @@ public class BookingController {
                     updateSuccess = seatRepository.updateStatusFileLock(seatId, SeatStatus.BOOKED);
                     break;
                 case OPTIMISTIC:
-                    updateSuccess = seatRepository.updateStatusOptimistic(seatId, SeatStatus.BOOKED, seat.getVersion());
+                    // Retry loop: đọc lại version mới nhất sau mỗi lần conflict
+                    int maxRetries = 20;
+                    for (int attempt = 0; attempt < maxRetries; attempt++) {
+                        Optional<Seat> freshSeat = seatRepository.findByIdForUpdate(seatId);
+                        if (!freshSeat.isPresent()) break;
+                        Seat latestSeat = freshSeat.get();
+                        // Nếu ghế đã bị đặt bởi thread khác → dừng retry
+                        if (latestSeat.getStatus() == SeatStatus.BOOKED
+                                || ticketRepository.existsBySeatAndMatch(seatId, matchId)) {
+                            break;
+                        }
+                        updateSuccess = seatRepository.updateStatusOptimistic(
+                            seatId, SeatStatus.BOOKED, latestSeat.getVersion());
+                        if (updateSuccess) break;
+                        // conflict → thử lại với version mới nhất
+                    }
                     break;
                 default:
                     updateSuccess = false;

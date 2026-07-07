@@ -155,7 +155,10 @@ public class SeatRepository extends CsvRepository<Seat> {
      * @param expectedVersion Version mà caller đọc được trước đó.
      * @return {@code true} nếu cập nhật thành công, {@code false} nếu bị conflict (caller retry).
      */
-    public boolean updateStatusOptimistic(String seatId, SeatStatus newStatus, int expectedVersion) {
+    public synchronized boolean updateStatusOptimistic(String seatId, SeatStatus newStatus, int expectedVersion) {
+        // synchronized để serialise phần I/O file: đảm bảo read → check → write là atomic.
+        // Ý nghĩa "Optimistic" vẫn giữ nguyên: version được dùng để detect conflict,
+        // caller nhận false khi conflict và phải retry với version mới nhất.
         List<Seat> all = findAll();
 
         boolean updated = false;
@@ -164,7 +167,7 @@ public class SeatRepository extends CsvRepository<Seat> {
             if (seatId.equals(seat.getSeatId())) {
                 // Kiểm tra version — nếu lệch nghĩa là thread khác đã ghi trước
                 if (seat.getVersion() != expectedVersion) {
-                    return false; // Optimistic Lock conflict
+                    return false; // Optimistic Lock conflict → caller retry
                 }
                 // Version khớp → áp dụng update
                 seat.updateStatus(newStatus); // tự động tăng version
@@ -228,11 +231,11 @@ public class SeatRepository extends CsvRepository<Seat> {
     public boolean updateStatusFileLock(String seatId, SeatStatus newStatus) {
         try (RandomAccessFile file = new RandomAccessFile(FILE_PATH, "rw");
              FileChannel channel = file.getChannel()) {
-            
+
             // Lấy exclusive lock trên file
             FileLock lock = channel.lock();
             try {
-                // Đọc toàn bộ (Vì đã có OS lock, ta có thể dùng findAll đọc trực tiếp)
+                // Đọc toàn bộ (đã có OS lock nên an toàn khi dùng findAll)
                 List<Seat> all = findAll();
                 boolean updated = false;
                 for (int i = 0; i < all.size(); i++) {
@@ -247,24 +250,29 @@ public class SeatRepository extends CsvRepository<Seat> {
                         break;
                     }
                 }
-                
+
                 if (updated) {
-                    // Xóa file cũ và ghi lại nội dung mới
-                    file.setLength(0); // Truncate the file to 0 bytes
-                    file.writeBytes(getCsvHeader() + System.lineSeparator());
+                    // Xóa file cũ và ghi lại nội dung mới bằng UTF-8 (nhất quán với CsvRepository)
+                    file.setLength(0);
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(getCsvHeader()).append(System.lineSeparator());
                     for (Seat s : all) {
-                        file.writeBytes(s.toCsvLine() + System.lineSeparator());
+                        sb.append(s.toCsvLine()).append(System.lineSeparator());
                     }
+                    file.write(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     return true;
                 }
                 return false;
             } finally {
-                if (lock != null) {
+                if (lock != null && lock.isValid()) {
                     lock.release();
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error during FileLock update: " + e.getMessage());
+            // In cả tên class exception để dễ debug, tránh in "null" khi getMessage() == null
+            System.err.println("Error during FileLock update: "
+                + e.getClass().getSimpleName() + " - "
+                + (e.getMessage() != null ? e.getMessage() : "(no message)"));
             return false;
         }
     }

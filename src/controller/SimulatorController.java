@@ -44,13 +44,17 @@ public class SimulatorController {
     }
 
     public void resetData(String matchId) {
-        // Reset ALL seats của match về AVAILABLE và đưa version về 0.
-        // setVersion(0) là cố ý: ta muốn mỗi lần benchmark bắt đầu từ version sạch
-        // để kết quả của từng cơ chế không bị ảnh hưởng bởi version tích lũy từ lần trước.
-        List<Seat> allSeats = seatRepository.findByMatch(matchId);
+        // Load TẤT CẢ seats (không chỉ theo matchId) để không ghi đè mất data của match khác.
+        // Bug cũ: findByMatch() chỉ lấy một phần, saveAll() ghi lại toàn bộ file → xoá seats match khác.
+        List<Seat> allSeats = seatRepository.findAll();
         for (Seat seat : allSeats) {
-            seat.updateStatus(SeatStatus.AVAILABLE);
-            seat.setVersion(0); // reset về 0 giữa các lần chạy benchmark — không liên quan đến updateStatus()
+            if (matchId.equals(seat.getMatchId())) {
+                // Dùng setStatus + setVersion thay vì updateStatus() vì:
+                // updateStatus() tăng version trước, rồi setVersion(0) override → version = 0 (đúng)
+                // nhưng thứ tự ngược lại rõ ràng hơn nên dùng setter trực tiếp.
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seat.setVersion(0); // reset về 0 cho mỗi lần benchmark
+            }
         }
         seatRepository.saveAll(allSeats);
 
