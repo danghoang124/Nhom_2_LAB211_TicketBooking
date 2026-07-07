@@ -51,18 +51,23 @@ public class BookingView {
     private void handleBooking() {
         System.out.println("\n--- THỰC HIỆN ĐẶT VÉ ---");
 
+        // Lấy fanId từ session hiện tại — không prompt để tránh giả mạo fan khác
+        if (!fanController.isLoggedIn()) {
+            System.out.println("[FAILED] Bạn chưa đăng nhập.");
+            return;
+        }
         String fanId = fanController.getCurrentFan().getFanId();
 
         System.out.print("Nhập mã Trận đấu (Match ID): ");
-        String matchId = scanner.nextLine();
-        
+        String matchId = scanner.nextLine().trim();
+
         System.out.print("Nhập mã Ghế (Seat ID): ");
-        String seatId = scanner.nextLine();
+        String seatId = scanner.nextLine().trim();
 
         LockMechanism mechanism = chooseMechanism();
 
         boolean result = bookingController.bookSeat(fanId, matchId, seatId, mechanism);
-        
+
         if (result) {
             System.out.println("-> Đặt vé THÀNH CÔNG! Ghế " + seatId + " đã thuộc về bạn.");
         } else {

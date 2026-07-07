@@ -72,6 +72,8 @@ public class DataGenerator {
             { 25, 35 }, // STANDING
             { 25, 35 }, // ECONOMY_LOWER
     };
+    // VIP=500k, STANDARD=200k, STANDING=100k, ECONOMY_LOWER=80k
+    // Thứ tự phải khớp với SECTION_TYPES[] và docs/csv_schema.md
     private static final long[] SECTION_PRICES = { 500_000L, 200_000L, 100_000L, 80_000L };
 
     // ─────────────────────────────────────────────────────────────────────────

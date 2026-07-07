@@ -146,6 +146,10 @@ public class SeatRepository extends CsvRepository<Seat> {
      * file đồng thời, nếu version thay đổi giữa chừng thì conflict được phát hiện
      * qua version check. Caller phải retry khi nhận {@code false}.
      *
+     * <p><b>Lưu ý:</b> Method này KHÔNG được đánh dấu {@code synchronized}
+     * vì mục đích của OPTIMISTIC là cho phép các thread đọc đồng thời và
+     * phát hiện conflict qua version, thay vì blocking như SYNCHRONIZED.
+     *
      * @param seatId          ID ghế cần cập nhật.
      * @param newStatus       Trạng thái mới.
      * @param expectedVersion Version mà caller đọc được trước đó.
