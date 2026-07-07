@@ -67,16 +67,20 @@ public class BookingView {
         }
     }
 
-    private void handleCancellation() {
+    /**
+     * Xử lý hủy vé — public để MainView có thể delegate sang đây
+     * sau khi user xem danh sách vé và muốn hủy.
+     */
+    public void handleCancellation() {
         System.out.println("\n--- THỰC HIỆN HỦY VÉ ---");
         System.out.print("Nhập mã Vé (Ticket ID) cần hủy: ");
         String ticketId = scanner.nextLine();
 
         boolean result = bookingController.cancelBooking(ticketId);
         if (result) {
-            System.out.println("-> Hủy vé THÀNH CÔNG! Ghế đã được trống.");
+            System.out.println("--> Hủy vé THÀNH CÔNG! Ghế đã được trống.");
         } else {
-            System.out.println("-> Hủy vé THẤT BẠI! Không tìm thấy vé hoặc vé đã bị hủy.");
+            System.out.println("--> Hủy vé THẤT BẠI! Không tìm thấy vé hoặc vé đã bị hủy.");
         }
     }
 }

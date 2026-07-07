@@ -67,10 +67,12 @@ public class MainView {
         while (true) {
             if (!fanController.isLoggedIn()) {
                 boolean shouldExit = showGuestMenu();
-                if (shouldExit) break;
+                if (shouldExit)
+                    break;
             } else {
                 boolean loggedOut = showMainMenu();
-                if (loggedOut) continue;
+                if (loggedOut)
+                    continue;
             }
         }
     }
@@ -91,7 +93,7 @@ public class MainView {
                 registerView.show();
                 return false;
             case "0":
-                return true; 
+                return true;
             default:
                 System.out.println("Invalid option. Please try again.");
                 return false;
@@ -100,8 +102,8 @@ public class MainView {
 
     private boolean showMainMenu() {
         Fan currentFan = fanController.getCurrentFan();
-        boolean isAdmin = currentFan.getUsername() != null && 
-                          currentFan.getUsername().toLowerCase().startsWith("admin");
+        boolean isAdmin = currentFan.getUsername() != null &&
+                currentFan.getUsername().toLowerCase().startsWith("admin");
 
         while (true) {
             System.out.println("\n======================================");
@@ -210,7 +212,8 @@ public class MainView {
 
         System.out.print("\nEnter Section ID to view details (e.g. SEC001), or press Enter to skip: ");
         String sectionId = scanner.nextLine().trim();
-        if (sectionId.isEmpty()) return;
+        if (sectionId.isEmpty())
+            return;
 
         List<Seat> seats = seatRepository.findBySectionAndMatch(sectionId, matchId);
         if (seats.isEmpty()) {
@@ -224,7 +227,8 @@ public class MainView {
         String currentRow = "";
         for (Seat seat : seats) {
             if (!seat.getRowLabel().equals(currentRow)) {
-                if (!currentRow.isEmpty()) System.out.println();
+                if (!currentRow.isEmpty())
+                    System.out.println();
                 currentRow = seat.getRowLabel();
                 System.out.printf("  Row %-3s: ", currentRow);
             }
@@ -280,21 +284,64 @@ public class MainView {
             return;
         }
 
+        // ── Bước 1: Hiển thị và cho chọn Section ─────────────────────────────
         List<Section> sections = sectionRepository.findAll();
         System.out.println("\nSeat Sections:");
         for (Section sec : sections) {
-            List<Seat> availSeats = seatRepository.findAvailableBySectionAndMatch(sec.getSectionId(), matchId);
-            System.out.printf("  %s - %-15s | Price: %,10d VND | Available seats: %d%n",
-                    sec.getSectionId(), sec.getSectionType().name(), sec.getBasePrice(), availSeats.size());
+            List<Seat> availSeats = seatRepository.findAvailableBySectionAndMatch(
+                    sec.getSectionId(), matchId);
+            System.out.printf("  %s - %-15s | Price: %,10d VND | Available: %d seats%n",
+                    sec.getSectionId(), sec.getSectionType().name(),
+                    sec.getBasePrice(), availSeats.size());
         }
 
-        System.out.print("\nEnter Seat ID (e.g. SEAT000001): ");
+        System.out.print("\nEnter Section ID (e.g. SEC001): ");
+        String sectionId = scanner.nextLine().trim();
+
+        // Validate Section ID
+        Optional<Section> sectionOpt = sections.stream()
+                .filter(s -> s.getSectionId().equals(sectionId))
+                .findFirst();
+        if (!sectionOpt.isPresent()) {
+            System.out.println("[FAILED] Invalid Section ID.");
+            return;
+        }
+
+        // ── Bước 2: Hiển thị ghế trống trong Section vừa chọn ────────────────
+        List<Seat> availableSeats = seatRepository.findAvailableBySectionAndMatch(
+                sectionId, matchId);
+        if (availableSeats.isEmpty()) {
+            System.out.println("[FAILED] No available seats in this section.");
+            return;
+        }
+
+        System.out.printf("\nAvailable seats in %s (%s - %,d VND):%n",
+                sectionId,
+                sectionOpt.get().getSectionType().name(),
+                sectionOpt.get().getBasePrice());
+
+        // In danh sách ghế trống theo hàng
+        String currentRow = "";
+        for (Seat s : availableSeats) {
+            if (!s.getRowLabel().equals(currentRow)) {
+                if (!currentRow.isEmpty())
+                    System.out.println();
+                System.out.print("  Row " + s.getRowLabel() + ": ");
+                currentRow = s.getRowLabel();
+            }
+            System.out.print(s.getSeatId() + " ");
+        }
+        System.out.println();
+
+        // ── Bước 3: Chọn Seat ID trong Section đó ────────────────────────────
+        System.out.print("\nEnter Seat ID from the list above: ");
         String seatId = scanner.nextLine().trim();
 
-        if (seatId.toUpperCase().startsWith("SEC")) {
-            System.out.println("[FAILED] Bạn đã nhập Mã Khu Vực (Section ID) '" + seatId + "' thay vì Mã Ghế (Seat ID).");
-            System.out.println("[TIP] Mã ghế hợp lệ có định dạng như SEATxxxxxx (Ví dụ: SEAT000201).");
-            System.out.println("      Bạn có thể chọn '2. View seat map by match' từ Menu chính để xem các Mã Ghế trống.");
+        // Validate: ghế phải thuộc đúng Section vừa chọn
+        boolean validSeat = availableSeats.stream()
+                .anyMatch(s -> s.getSeatId().equals(seatId));
+        if (!validSeat) {
+            System.out.println("[FAILED] Seat ID không hợp lệ hoặc không thuộc section " + sectionId);
             return;
         }
 
@@ -357,10 +404,10 @@ public class MainView {
 
     private void showMyTickets() {
         Fan currentFan = fanController.getCurrentFan();
-        List<Ticket> tickets = fanController.getMyTickets();
+        List<Ticket> tickets = fanController.getMyValidTickets();
 
         System.out.println("\n======================================");
-        System.out.println("           MY TICKETS                 ");
+        System.out.println("       MY TICKET HISTORY              ");
         System.out.println("======================================");
 
         if (tickets.isEmpty()) {
@@ -386,5 +433,13 @@ public class MainView {
 
         System.out.println("-".repeat(90));
         System.out.printf("Total: %d tickets | Total value: %,d VND%n", tickets.size(), totalPrice);
+
+        // ── Wire BookingView: delegate sang BookingView để tái sử dụng logic hủy vé ──
+        System.out.println("\nDo you want to cancel a ticket? (y to cancel, Enter to skip): ");
+        System.out.print("> ");
+        String input = scanner.nextLine().trim();
+        if ("y".equalsIgnoreCase(input)) {
+            bookingView.handleCancellation();
+        }
     }
 }

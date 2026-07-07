@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Controller xử lý logic nghiệp vụ đặt vé và hủy vé.
@@ -48,6 +48,20 @@ public class BookingController {
     private final DateTimeFormatter     formatter =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * Counter sinh Ticket ID — dạng TKT00000001, TKT00000002, ...
+     * Khởi tạo bằng max ID hiện có trong CSV để không bao giờ trung sau khi restart.
+     * Thread-safe: AtomicLong.getAndIncrement() là atomic operation.
+     */
+    private final AtomicLong ticketCounter;
+
+    /**
+     * Counter sinh Transaction ID — dạng TXN00000001, TXN00000002, ...
+     * Khởi tạo bằng max ID hiện có trong CSV để không bao giờ trùng sau khi restart.
+     * Thread-safe: AtomicLong.getAndIncrement() là atomic operation.
+     */
+    private final AtomicLong transactionCounter;
+
     /** Giá mặc định dùng khi không tra được Section (fallback). */
     private static final long DEFAULT_PRICE = 500_000L;
 
@@ -62,6 +76,11 @@ public class BookingController {
         this.sectionRepository     = sectionRepository;
         this.ticketRepository      = ticketRepository;
         this.transactionRepository = transactionRepository;
+
+        // Khởi tạo counter từ max ID đang có trong CSV
+        // Đảm bảo khởi động lại app không bao giờ sinh ra ID trùng với records cũ
+        this.ticketCounter      = new AtomicLong(initCounterFromTickets(ticketRepository));
+        this.transactionCounter = new AtomicLong(initCounterFromTransactions(transactionRepository));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -379,7 +398,7 @@ public class BookingController {
      */
     public void createTicket(String fanId, String matchId, String seatId,
                               String transactionId, long price) {
-        String ticketId = "TKT" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String ticketId = generateTicketId();
         String bookedAt = LocalDateTime.now().format(formatter);
         Ticket ticket = new Ticket(ticketId, fanId, seatId, matchId,
                 transactionId, price, bookedAt, TicketStatus.VALID);
@@ -401,8 +420,66 @@ public class BookingController {
         transactionRepository.append(transaction);
     }
 
-    /** Sinh transaction ID duy nhất. */
+    /**
+     * Sinh Ticket ID dạng TKT00000001 dùng AtomicLong counter.
+     * Không bao giờ trùng — ngay cả khi 500 thread gọi đồng thời.
+     */
+    private String generateTicketId() {
+        return String.format("TKT%08d", ticketCounter.getAndIncrement());
+    }
+
+    /**
+     * Sinh Transaction ID dạng TXN00000001 dùng AtomicLong counter.
+     * Không bao giờ trùng — ngay cả khi 500 thread gọi đồng thời.
+     */
     private String generateTransactionId() {
-        return "TXN" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return String.format("TXN%08d", transactionCounter.getAndIncrement());
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // COUNTER INIT HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Đọc tất cả ticketId hiện có trong CSV, tìm số lớn nhất rồi +1.
+     * VD: max(TKT00000042, TKT00000017) = 42 → counter bắt đầu từ 43.
+     *
+     * @return Giá trị khởi đầu cho ticketCounter (tối thiểu là 1).
+     */
+    private static long initCounterFromTickets(TicketRepository repo) {
+        long max = 0;
+        try {
+            for (model.entity.Ticket t : repo.findAll()) {
+                String id = t.getTicketId(); // "TKT00000042"
+                if (id != null && id.startsWith("TKT") && id.length() > 3) {
+                    try {
+                        long num = Long.parseLong(id.substring(3));
+                        if (num > max) max = num;
+                    } catch (NumberFormatException ignored) { }
+                }
+            }
+        } catch (Exception ignored) { }
+        return max + 1;
+    }
+
+    /**
+     * Đọc tất cả transactionId hiện có trong CSV, tìm số lớn nhất rồi +1.
+     *
+     * @return Giá trị khởi đầu cho transactionCounter (tối thiểu là 1).
+     */
+    private static long initCounterFromTransactions(TransactionRepository repo) {
+        long max = 0;
+        try {
+            for (model.entity.BookingTransaction tx : repo.findAll()) {
+                String id = tx.getTransactionId(); // "TXN00000017"
+                if (id != null && id.startsWith("TXN") && id.length() > 3) {
+                    try {
+                        long num = Long.parseLong(id.substring(3));
+                        if (num > max) max = num;
+                    } catch (NumberFormatException ignored) { }
+                }
+            }
+        } catch (Exception ignored) { }
+        return max + 1;
     }
 }

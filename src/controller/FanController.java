@@ -307,9 +307,13 @@ public class FanController {
      *
      * <p>Ví dụ: đang có FAN0001 đến FAN0050 → sinh ra FAN0051.
      *
+     * <p><b>Thread-safety:</b> Được đánh dấu synchronized để tránh race condition
+     * khi Simulator chạy nhiều threads đồng thời — nếu 2 thread cùng vào đây
+     * cùng lúc, có thể sinh ra 2 FanID trùng nhau.
+     *
      * @return FanID mới dạng "FANxxxx" (4 chữ số, có padding zero).
      */
-    private String generateNextFanId() {
+    private synchronized String generateNextFanId() {
         List<Fan> allFans = fanRepository.findAll();
 
         int maxNum = 0;

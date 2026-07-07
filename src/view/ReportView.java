@@ -52,10 +52,17 @@ public class ReportView {
         }
     }
 
+    /**
+     * Hiển thị toàn bộ lịch sử vé của Fan (cả VALID lẫn CANCELLED).
+     *
+     * <p>Nhất quán với {@code MainView.showMyTickets()} — cả hai cùng
+     * gọi hàm lấy tất cả vé, không chỉ vé VALID.
+     */
     public void displayMyTickets(String fanId) {
-        List<Ticket> tickets = reportController.getTicketsByFan(fanId);
+        // Dùng getAllTicketsByFan() để hiển thị đầy đủ lịch sử vé
+        List<Ticket> tickets = reportController.getAllTicketsByFan(fanId);
 
-        System.out.println("\n--- MY TICKETS (VALID) ---");
+        System.out.println("\n--- MY TICKET HISTORY (ALL) ---");
         if (tickets.isEmpty()) {
             System.out.println("You do not have any tickets.");
             return;

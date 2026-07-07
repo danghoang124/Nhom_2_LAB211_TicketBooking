@@ -40,9 +40,20 @@ public class ReportController {
 
     // ── Vé của Fan ───────────────────────────────────────────────────────────
 
-    /** Lấy danh sách vé hợp lệ của Fan theo fanId. */
+    /** Lấy danh sách vé hợp lệ (chưa hủy) của Fan theo fanId. */
     public List<Ticket> getTicketsByFan(String fanId) {
         return ticketRepository.findValidTickets(fanId);
+    }
+
+    /**
+     * Lấy tất cả vé của Fan (cả VALID lẫn CANCELLED).
+     *
+     * <p>Dùng cho màn hình "Lịch sử vé" — tương đương với
+     * {@link controller.FanController#getMyTickets()} để đảm bảo nhất quán
+     * giữa MainView và ReportView.
+     */
+    public List<Ticket> getAllTicketsByFan(String fanId) {
+        return ticketRepository.findByFan(fanId);
     }
 
     // ── Lịch sử giao dịch ────────────────────────────────────────────────────
