@@ -72,7 +72,7 @@ public class DataGenerator {
             { 25, 35 }, // STANDING
             { 25, 35 }, // ECONOMY_LOWER
     };
-    private static final long[] SECTION_PRICES = { 500_000L, 200_000L, 80_000L, 100_000L };
+    private static final long[] SECTION_PRICES = { 500_000L, 200_000L, 100_000L, 80_000L };
 
     // ─────────────────────────────────────────────────────────────────────────
     // Records (Java 17)

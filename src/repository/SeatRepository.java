@@ -142,15 +142,16 @@ public class SeatRepository extends CsvRepository<Seat> {
      *   <li>Nếu không khớp (conflict): không ghi gì → trả về {@code false}.</li>
      * </ol>
      *
-     * <p><b>Thread Safety:</b> Phiên bản này chưa có mutex/file-lock.
-     * Thread-safety sẽ được bổ sung ở Tuần 7.
+     * <p><b>Thread Safety:</b> KHÔNG dùng synchronized/blocking — các thread đọc
+     * file đồng thời, nếu version thay đổi giữa chừng thì conflict được phát hiện
+     * qua version check. Caller phải retry khi nhận {@code false}.
      *
      * @param seatId          ID ghế cần cập nhật.
      * @param newStatus       Trạng thái mới.
      * @param expectedVersion Version mà caller đọc được trước đó.
-     * @return {@code true} nếu cập nhật thành công, {@code false} nếu bị conflict.
+     * @return {@code true} nếu cập nhật thành công, {@code false} nếu bị conflict (caller retry).
      */
-    public synchronized boolean updateStatusOptimistic(String seatId, SeatStatus newStatus, int expectedVersion) {
+    public boolean updateStatusOptimistic(String seatId, SeatStatus newStatus, int expectedVersion) {
         List<Seat> all = findAll();
 
         boolean updated = false;
