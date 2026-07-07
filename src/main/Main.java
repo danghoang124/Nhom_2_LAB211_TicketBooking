@@ -61,8 +61,7 @@ public class Main {
                     System.out.println("\n[INFO] Starting Simulator...");
                     try {
                         AppContext appCtx = new AppContext();
-                        controller.SimulatorController simCtrl = new controller.SimulatorController(appCtx.getBookingController());
-                        view.SimulatorView simView = new view.SimulatorView(simCtrl, appCtx.getSeatRepository(), appCtx.getTicketRepository(), appCtx.getTransactionRepository());
+                        view.SimulatorView simView = new view.SimulatorView(appCtx.getSimulatorController());
                         simView.start();
                     } catch (Exception e) {
                         System.err.println("Error running Simulator: " + e.getMessage());

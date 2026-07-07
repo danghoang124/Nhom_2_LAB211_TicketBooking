@@ -3,30 +3,16 @@ package view;
 import controller.SimulatorController;
 import controller.SimulatorController.SimulationResult;
 import model.enums.LockMechanism;
-import model.enums.SeatStatus;
-import repository.SeatRepository;
-import repository.TicketRepository;
-import repository.TransactionRepository;
 import model.entity.Seat;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class SimulatorView {
     private final SimulatorController simulatorController;
-    private final SeatRepository seatRepository;
-    private final TicketRepository ticketRepository;
-    private final TransactionRepository transactionRepository;
 
-    public SimulatorView(SimulatorController simulatorController,
-                         SeatRepository seatRepository,
-                         TicketRepository ticketRepository,
-                         TransactionRepository transactionRepository) {
+    public SimulatorView(SimulatorController simulatorController) {
         this.simulatorController = simulatorController;
-        this.seatRepository = seatRepository;
-        this.ticketRepository = ticketRepository;
-        this.transactionRepository = transactionRepository;
     }
 
     public void start() {
@@ -47,8 +33,7 @@ public class SimulatorView {
         String matchId = scanner.nextLine().trim();
         if (matchId.isEmpty()) matchId = "MATCH001";
 
-        // Pick an available seat
-        List<Seat> availableSeats = seatRepository.findAvailableByMatch(matchId);
+        List<Seat> availableSeats = simulatorController.getAvailableSeats(matchId);
         if (availableSeats.isEmpty()) {
             System.out.println("No available seats for match " + matchId + ". Please run Data Generator (option 1) first.");
             return;
@@ -80,17 +65,17 @@ public class SimulatorView {
         if ("5".equals(choice)) {
             System.out.println("\nRunning benchmark for all 4 mechanisms (" + numThreads + " threads)...");
             System.out.println("Please wait, this may take a few seconds...");
-            
+
             LockMechanism[] mechanisms = LockMechanism.values();
             SimulationResult[] results = new SimulationResult[mechanisms.length];
-            
+
             for (int i = 0; i < mechanisms.length; i++) {
-                resetForNextRun(seatId, matchId);
+                simulatorController.resetData(matchId);
                 System.out.println("- Running " + mechanisms[i] + "...");
                 results[i] = simulatorController.runSimulation(numThreads, matchId, seatId, mechanisms[i]);
             }
             printResultTable(results);
-            
+
         } else {
             LockMechanism mechanism = LockMechanism.NO_LOCK;
             switch (choice) {
@@ -98,45 +83,10 @@ public class SimulatorView {
                 case "3": mechanism = LockMechanism.SYNCHRONIZED; break;
                 case "4": mechanism = LockMechanism.OPTIMISTIC; break;
             }
-            
+
             System.out.println("\nRunning Simulator with mechanism: " + mechanism);
             SimulationResult result = simulatorController.runSimulation(numThreads, matchId, seatId, mechanism);
             printResultTable(new SimulationResult[]{result});
-        }
-    }
-
-    /**
-     * Reset seat to AVAILABLE and remove all tickets/transactions
-     * related to this seat so the next run starts clean.
-     */
-    private void resetForNextRun(String seatId, String matchId) {
-        try {
-            // 1. Reset seat status to AVAILABLE
-            List<Seat> allSeats = seatRepository.findAll();
-            for (Seat seat : allSeats) {
-                if (seat.getSeatId().equals(seatId)) {
-                    seat.setStatus(SeatStatus.AVAILABLE);
-                    seat.setVersion(0);
-                    break;
-                }
-            }
-            seatRepository.saveAll(allSeats);
-
-            // 2. Remove tickets for this seat + match
-            ticketRepository.saveAll(
-                ticketRepository.findByCondition(t ->
-                    !(t.getSeatId().equals(seatId) && t.getMatchId().equals(matchId))
-                )
-            );
-
-            // 3. Remove simulator transactions (FAN_SIM_*)
-            transactionRepository.saveAll(
-                transactionRepository.findByCondition(t ->
-                    !t.getFanId().startsWith("FAN_SIM_")
-                )
-            );
-        } catch (Exception e) {
-            System.out.println("Error resetting data: " + e.getMessage());
         }
     }
 

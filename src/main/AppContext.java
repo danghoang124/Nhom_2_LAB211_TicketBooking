@@ -4,6 +4,7 @@ import controller.AdminController;
 import controller.BookingController;
 import controller.FanController;
 import controller.ReportController;
+import controller.SimulatorController;
 import controller.StadiumController;
 import repository.*;
 
@@ -37,6 +38,7 @@ public class AppContext {
     private final BookingController bookingController;
     private final ReportController reportController;
     private final StadiumController stadiumController;
+    private final SimulatorController simulatorController;
 
     // ── Constructor — wiring tất cả thành phần ─────────────────────────────────
     public AppContext() {
@@ -54,11 +56,14 @@ public class AppContext {
                 stadiumRepository, sectionRepository, matchRepository);
         this.fanController = new FanController(fanRepository, ticketRepository);
         this.bookingController = new BookingController(
-                seatRepository, sectionRepository, ticketRepository, transactionRepository);
+                seatRepository, sectionRepository, ticketRepository, transactionRepository, matchRepository);
         this.reportController = new ReportController(ticketRepository, transactionRepository,
                                                       matchRepository, seatRepository, sectionRepository);
         this.stadiumController = new StadiumController(
                 matchRepository, sectionRepository, seatRepository);
+
+        this.simulatorController = new SimulatorController(
+                bookingController, seatRepository, ticketRepository, transactionRepository, matchRepository);
     }
 
     // ── Getters ────────────────────────────────────────────────────────────────
@@ -76,4 +81,5 @@ public class AppContext {
     public BookingController getBookingController() { return bookingController; }
     public ReportController getReportController() { return reportController; }
     public StadiumController getStadiumController() { return stadiumController; }
+    public SimulatorController getSimulatorController() { return simulatorController; }
 }

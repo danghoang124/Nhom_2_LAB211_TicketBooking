@@ -3,13 +3,16 @@ package controller;
 import exception.BookingLimitExceededException;
 import exception.SeatAlreadyBookedException;
 import model.entity.BookingTransaction;
+import model.entity.Match;
 import model.entity.Seat;
 import model.entity.Section;
 import model.entity.Ticket;
 import model.enums.LockMechanism;
+import model.enums.MatchStatus;
 import model.enums.SeatStatus;
 import model.enums.TicketStatus;
 import model.enums.TransactionStatus;
+import repository.MatchRepository;
 import repository.SeatRepository;
 import repository.SectionRepository;
 import repository.TicketRepository;
@@ -45,6 +48,7 @@ public class BookingController {
     private final SectionRepository     sectionRepository;
     private final TicketRepository      ticketRepository;
     private final TransactionRepository transactionRepository;
+    private final MatchRepository       matchRepository;
     private final DateTimeFormatter     formatter =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -71,11 +75,13 @@ public class BookingController {
     public BookingController(SeatRepository seatRepository,
                              SectionRepository sectionRepository,
                              TicketRepository ticketRepository,
-                             TransactionRepository transactionRepository) {
+                             TransactionRepository transactionRepository,
+                             MatchRepository matchRepository) {
         this.seatRepository        = seatRepository;
         this.sectionRepository     = sectionRepository;
         this.ticketRepository      = ticketRepository;
         this.transactionRepository = transactionRepository;
+        this.matchRepository       = matchRepository;
 
         // Khởi tạo counter từ max ID đang có trong CSV
         // Đảm bảo khởi động lại app không bao giờ sinh ra ID trùng với records cũ
@@ -253,7 +259,15 @@ public class BookingController {
             Optional<Section> sectionOpt = sectionRepository.findById(seat.getSectionId());
             totalAmount = sectionOpt.map(Section::getBasePrice).orElse(DEFAULT_PRICE);
 
-            // 2. Kiểm tra ghế còn trống — throw nếu đã BOOKED
+            // 2. Kiểm tra match đang mở bán vé
+            Optional<Match> matchOpt = matchRepository.findById(matchId);
+            if (matchOpt.isPresent() && matchOpt.get().getStatus() != MatchStatus.SCHEDULED) {
+                createTransaction(transactionId, fanId, matchId, 1, totalAmount,
+                        TransactionStatus.FAILED, mechanism, startTime);
+                return false;
+            }
+
+            // 3. Kiểm tra ghế còn trống — throw nếu đã BOOKED
             if (seat.getStatus() == SeatStatus.BOOKED
                     || ticketRepository.existsBySeatAndMatch(seatId, matchId)) {
                 createTransaction(transactionId, fanId, matchId, 1, totalAmount,
