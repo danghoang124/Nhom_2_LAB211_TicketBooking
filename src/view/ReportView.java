@@ -10,8 +10,8 @@ import java.util.Scanner;
 
 public class ReportView {
 
-    private final ReportController reportController;
-    private final Scanner scanner;
+    private ReportController reportController;
+    private Scanner scanner;
 
     public ReportView(ReportController reportController, Scanner scanner) {
         this.reportController = reportController;

@@ -24,21 +24,21 @@ import repository.*;
 public class AppContext {
 
     // ── Repositories ───────────────────────────────────────────────────────────
-    private final FanRepository fanRepository;
-    private final MatchRepository matchRepository;
-    private final SeatRepository seatRepository;
-    private final SectionRepository sectionRepository;
-    private final StadiumRepository stadiumRepository;
-    private final TicketRepository ticketRepository;
-    private final TransactionRepository transactionRepository;
+    private FanRepository fanRepository;
+    private MatchRepository matchRepository;
+    private SeatRepository seatRepository;
+    private SectionRepository sectionRepository;
+    private StadiumRepository stadiumRepository;
+    private TicketRepository ticketRepository;
+    private TransactionRepository transactionRepository;
 
     // ── Controllers ──────────────────────────────────────────────
-    private final AdminController adminController;
-    private final FanController fanController;
-    private final BookingController bookingController;
-    private final ReportController reportController;
-    private final StadiumController stadiumController;
-    private final SimulatorController simulatorController;
+    private AdminController adminController;
+    private FanController fanController;
+    private BookingController bookingController;
+    private ReportController reportController;
+    private StadiumController stadiumController;
+    private SimulatorController simulatorController;
 
     // ── Constructor — wiring tất cả thành phần ─────────────────────────────────
     public AppContext() {

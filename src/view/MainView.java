@@ -20,19 +20,19 @@ import java.util.Scanner;
 
 public class MainView {
 
-    private final AppContext appContext;
-    private final Scanner scanner;
+    private AppContext appContext;
+    private Scanner scanner;
 
-    private final FanController fanController;
-    private final BookingController bookingController;
-    private final ReportController reportController;
-    private final StadiumController stadiumController;
+    private FanController fanController;
+    private BookingController bookingController;
+    private ReportController reportController;
+    private StadiumController stadiumController;
 
-    private final LoginView loginView;
-    private final RegisterView registerView;
-    private final BookingView bookingView;
-    private final ReportView reportView;
-    private final AdminView adminView;
+    private LoginView loginView;
+    private RegisterView registerView;
+    private BookingView bookingView;
+    private ReportView reportView;
+    private AdminView adminView;
 
     public MainView(AppContext appContext, Scanner scanner) {
         this.appContext = appContext;

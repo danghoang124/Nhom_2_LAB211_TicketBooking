@@ -43,9 +43,9 @@ import java.util.List;
 public class StadiumController {
 
     // ── Dependencies (được inject qua Constructor) ──────────────────────────
-    private final MatchRepository   matchRepository;
-    private final SectionRepository sectionRepository;
-    private final SeatRepository    seatRepository;
+    private MatchRepository   matchRepository;
+    private SectionRepository sectionRepository;
+    private SeatRepository    seatRepository;
 
     // ── Constructor ──────────────────────────────────────────────────────────
 

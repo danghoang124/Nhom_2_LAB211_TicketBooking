@@ -27,8 +27,8 @@ import java.util.Scanner;
  */
 public class AdminView {
 
-    private final AdminController adminController;
-    private final Scanner         scanner;
+    private AdminController adminController;
+    private Scanner         scanner;
 
     /**
      * Khởi tạo AdminView.

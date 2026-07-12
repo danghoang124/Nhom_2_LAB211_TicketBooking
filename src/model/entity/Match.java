@@ -13,12 +13,12 @@ import model.enums.MatchStatus;
  */
 public class Match extends BaseEntity {
 
-    private final String      matchId;    // PK — dạng MATCH001
-    private final String      stadiumId;  // FK → stadiums
-    private final String      homeTeam;
-    private final String      awayTeam;
-    private final String      matchDate;  // yyyy-MM-dd
-    private final String      matchTime;  // HH:mm
+    private String      matchId;    // PK — dạng MATCH001
+    private String      stadiumId;  // FK → stadiums
+    private String      homeTeam;
+    private String      awayTeam;
+    private String      matchDate;  // yyyy-MM-dd
+    private String      matchTime;  // HH:mm
     private       MatchStatus status;     // mutable — có thể đổi SCHEDULED → ONGOING → COMPLETED
 
     // ── Constructor ────────────────────────────────────────────────────────────

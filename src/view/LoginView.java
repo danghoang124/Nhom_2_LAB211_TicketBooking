@@ -26,8 +26,8 @@ import java.util.Scanner;
  */
 public class LoginView {
 
-    private final FanController fanController;
-    private final Scanner       scanner;
+    private FanController fanController;
+    private Scanner       scanner;
 
     /**
      * Khởi tạo LoginView.

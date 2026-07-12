@@ -24,8 +24,8 @@ import java.util.Scanner;
  */
 public class RegisterView {
 
-    private final FanController fanController;
-    private final Scanner       scanner;
+    private FanController fanController;
+    private Scanner       scanner;
 
     /**
      * Khởi tạo RegisterView.

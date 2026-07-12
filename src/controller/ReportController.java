@@ -20,11 +20,11 @@ import java.util.List;
  */
 public class ReportController {
 
-    private final TicketRepository      ticketRepository;
-    private final TransactionRepository transactionRepository;
-    private final MatchRepository       matchRepository;
-    private final SeatRepository        seatRepository;
-    private final SectionRepository     sectionRepository;
+    private TicketRepository      ticketRepository;
+    private TransactionRepository transactionRepository;
+    private MatchRepository       matchRepository;
+    private SeatRepository        seatRepository;
+    private SectionRepository     sectionRepository;
 
     public ReportController(TicketRepository ticketRepository,
                             TransactionRepository transactionRepository,

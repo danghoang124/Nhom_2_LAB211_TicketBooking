@@ -11,11 +11,11 @@ package model.entity;
  */
 public class Stadium extends BaseEntity {
 
-    private final String stadiumId;    // PK — dạng STD001
-    private final String name;
-    private final String city;
-    private final String address;
-    private final int    totalCapacity;
+    private String stadiumId;    // PK — dạng STD001
+    private String name;
+    private String city;
+    private String address;
+    private int    totalCapacity;
 
     // ── Constructor ────────────────────────────────────────────────────────────
 

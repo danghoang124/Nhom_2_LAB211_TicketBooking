@@ -31,9 +31,9 @@ import java.util.List;
  */
 public class AdminController {
 
-    private final StadiumRepository  stadiumRepository;
-    private final SectionRepository  sectionRepository;
-    private final MatchRepository    matchRepository;
+    private StadiumRepository  stadiumRepository;
+    private SectionRepository  sectionRepository;
+    private MatchRepository    matchRepository;
 
     public AdminController(StadiumRepository stadiumRepository,
                            SectionRepository sectionRepository,

@@ -34,8 +34,8 @@ import java.util.Optional;
 public class FanController {
 
     // ── Dependencies (tiêm qua constructor) ───────────────────────────────────
-    private final FanRepository    fanRepository;
-    private final TicketRepository ticketRepository;
+    private FanRepository    fanRepository;
+    private TicketRepository ticketRepository;
 
     // ── Session state ─────────────────────────────────────────────────────────
     /** Fan đang đăng nhập. null nếu chưa đăng nhập. */
@@ -383,9 +383,9 @@ public class FanController {
      * View sẽ kiểm tra {@code isSuccess()} để biết kết quả.
      */
     public static class RegisterResult {
-        private final boolean success;
-        private final String  message;
-        private final Fan     fan;      // null nếu thất bại
+        private boolean success;
+        private String  message;
+        private Fan     fan;      // null nếu thất bại
 
         private RegisterResult(boolean success, String message, Fan fan) {
             this.success = success;

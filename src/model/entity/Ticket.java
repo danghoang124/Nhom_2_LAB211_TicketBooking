@@ -16,13 +16,13 @@ import model.enums.TicketStatus;
  */
 public class Ticket extends BaseEntity {
 
-    private final String       ticketId;       // PK — dạng TKT00000001
-    private final String       fanId;          // FK → fans
-    private final String       seatId;         // FK → seats
-    private final String       matchId;        // FK → matches
-    private final String       transactionId;  // FK → transactions
-    private final long         price;          // giá thực tế thanh toán (VND)
-    private final String       bookedAt;       // yyyy-MM-dd HH:mm:ss
+    private String       ticketId;       // PK — dạng TKT00000001
+    private String       fanId;          // FK → fans
+    private String       seatId;         // FK → seats
+    private String       matchId;        // FK → matches
+    private String       transactionId;  // FK → transactions
+    private long         price;          // giá thực tế thanh toán (VND)
+    private String       bookedAt;       // yyyy-MM-dd HH:mm:ss
     private       TicketStatus status;         // mutable — VALID | CANCELLED
 
     // ── Constructor ────────────────────────────────────────────────────────────

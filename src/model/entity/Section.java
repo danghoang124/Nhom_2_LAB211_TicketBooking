@@ -16,11 +16,11 @@ import model.enums.SectionType;
  */
 public class Section extends BaseEntity {
 
-    private final String      sectionId;    // PK — dạng SEC001
-    private final SectionType sectionType;  // VIP | STANDARD | STANDING | ECONOMY_LOWER
-    private final int         totalRows;
-    private final int         seatsPerRow;
-    private final long        basePrice;    // đơn vị VND
+    private String      sectionId;    // PK — dạng SEC001
+    private SectionType sectionType;  // VIP | STANDARD | STANDING | ECONOMY_LOWER
+    private int         totalRows;
+    private int         seatsPerRow;
+    private long        basePrice;    // đơn vị VND
 
     // ── Constructor ────────────────────────────────────────────────────────────
 

@@ -6,9 +6,9 @@ import model.enums.LockMechanism;
 import java.util.Scanner;
 
 public class BookingView {
-    private final BookingController bookingController;
-    private final FanController fanController;
-    private final Scanner scanner;
+    private BookingController bookingController;
+    private FanController fanController;
+    private Scanner scanner;
 
     /**
      * Khởi tạo BookingView.

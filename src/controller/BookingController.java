@@ -44,12 +44,12 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class BookingController {
 
-    private final SeatRepository        seatRepository;
-    private final SectionRepository     sectionRepository;
-    private final TicketRepository      ticketRepository;
-    private final TransactionRepository transactionRepository;
-    private final MatchRepository       matchRepository;
-    private final DateTimeFormatter     formatter =
+    private SeatRepository        seatRepository;
+    private SectionRepository     sectionRepository;
+    private TicketRepository      ticketRepository;
+    private TransactionRepository transactionRepository;
+    private MatchRepository       matchRepository;
+    private DateTimeFormatter     formatter =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
@@ -57,14 +57,14 @@ public class BookingController {
      * Khởi tạo bằng max ID hiện có trong CSV để không bao giờ trung sau khi restart.
      * Thread-safe: AtomicLong.getAndIncrement() là atomic operation.
      */
-    private final AtomicLong ticketCounter;
+    private AtomicLong ticketCounter;
 
     /**
      * Counter sinh Transaction ID — dạng TXN00000001, TXN00000002, ...
      * Khởi tạo bằng max ID hiện có trong CSV để không bao giờ trùng sau khi restart.
      * Thread-safe: AtomicLong.getAndIncrement() là atomic operation.
      */
-    private final AtomicLong transactionCounter;
+    private AtomicLong transactionCounter;
 
     /** Giá mặc định dùng khi không tra được Section (fallback). */
     private static final long DEFAULT_PRICE = 500_000L;

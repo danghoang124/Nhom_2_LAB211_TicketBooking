@@ -20,11 +20,11 @@ import model.enums.SeatStatus;
  */
 public class Seat extends BaseEntity {
 
-    private final String     seatId;     // PK — dạng SEAT000001
-    private final String     sectionId;  // FK → sections
-    private final String     matchId;    // FK → matches
-    private final String     rowLabel;   // A, B, …, Z, AA, AB, …
-    private final int        seatNumber; // 1, 2, 3, …
+    private String     seatId;     // PK — dạng SEAT000001
+    private String     sectionId;  // FK → sections
+    private String     matchId;    // FK → matches
+    private String     rowLabel;   // A, B, …, Z, AA, AB, …
+    private int        seatNumber; // 1, 2, 3, …
     private       SeatStatus status;     // mutable — thay đổi theo quá trình booking
     private       int        version;    // mutable — tăng mỗi lần update (Optimistic Locking)
 

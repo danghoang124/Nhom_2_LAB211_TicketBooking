@@ -10,8 +10,8 @@ import java.util.Scanner;
 
 public class SimulatorView {
 
-    private final SimulatorController simulatorController;
-    private final Scanner scanner;
+    private SimulatorController simulatorController;
+    private Scanner scanner;
 
     public SimulatorView(SimulatorController simulatorController, Scanner scanner) {
         this.simulatorController = simulatorController;

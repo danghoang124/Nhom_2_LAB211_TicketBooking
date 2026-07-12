@@ -21,11 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimulatorController {
 
-    private final BookingController bookingController;
-    private final SeatRepository seatRepository;
-    private final TicketRepository ticketRepository;
-    private final TransactionRepository transactionRepository;
-    private final MatchRepository matchRepository;
+    private BookingController bookingController;
+    private SeatRepository seatRepository;
+    private TicketRepository ticketRepository;
+    private TransactionRepository transactionRepository;
+    private MatchRepository matchRepository;
 
     public SimulatorController(BookingController bookingController,
                                 SeatRepository seatRepository,

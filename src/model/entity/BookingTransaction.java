@@ -18,15 +18,15 @@ import model.enums.TransactionStatus;
  */
 public class BookingTransaction extends BaseEntity {
 
-    private final String            transactionId;   // PK — dạng TXN00000001
-    private final String            fanId;           // FK → fans
-    private final String            matchId;         // FK → matches
-    private final int               numberOfTickets; // 1–4 vé/giao dịch
-    private final long              totalAmount;     // tổng tiền (VND)
+    private String            transactionId;   // PK — dạng TXN00000001
+    private String            fanId;           // FK → fans
+    private String            matchId;         // FK → matches
+    private int               numberOfTickets; // 1–4 vé/giao dịch
+    private long              totalAmount;     // tổng tiền (VND)
     private       TransactionStatus status;          // mutable — SUCCESS | FAILED | PARTIAL
-    private final LockMechanism     mechanism;       // cơ chế đồng bộ đã dùng
-    private final String            createdAt;       // yyyy-MM-dd HH:mm:ss
-    private final long              durationMs;      // thời gian xử lý (milliseconds)
+    private LockMechanism     mechanism;       // cơ chế đồng bộ đã dùng
+    private String            createdAt;       // yyyy-MM-dd HH:mm:ss
+    private long              durationMs;      // thời gian xử lý (milliseconds)
 
     // ── Constructor ────────────────────────────────────────────────────────────
 

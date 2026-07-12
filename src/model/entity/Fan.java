@@ -16,15 +16,15 @@ import model.enums.Role;
  */
 public class Fan extends BaseEntity {
 
-    private final String  fanId;         // PK — dạng FAN0001
-    private final String  username;      // UNIQUE
-    private final String  passwordHash;  // SHA-256 hex, upper-case
-    private final String  fullName;
-    private final String  email;         // UNIQUE
-    private final String  phone;         // 0xxxxxxxxx
-    private final String  createdAt;     // yyyy-MM-dd HH:mm:ss
+    private String  fanId;         // PK — dạng FAN0001
+    private String  username;      // UNIQUE
+    private String  passwordHash;  // SHA-256 hex, upper-case
+    private String  fullName;
+    private String  email;         // UNIQUE
+    private String  phone;         // 0xxxxxxxxx
+    private String  createdAt;     // yyyy-MM-dd HH:mm:ss
     private       boolean isActive;      // mutable — có thể bị deactivate
-    private final Role    role;          // FAN hoặc ADMIN
+    private Role    role;          // FAN hoặc ADMIN
 
     // ── Constructor ────────────────────────────────────────────────────────────
 
