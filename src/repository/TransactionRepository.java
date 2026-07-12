@@ -17,6 +17,10 @@ import java.util.List;
  */
 public class TransactionRepository extends CsvRepository<BookingTransaction> {
 
+    // ── Singleton ─────────────────────────────────────────────────────────────
+    private static final TransactionRepository INSTANCE = new TransactionRepository();
+    public static TransactionRepository getInstance() { return INSTANCE; }
+
     private static final String FILE_PATH = "data/transactions.csv";
     private static final String HEADER    =
         "transactionId,fanId,matchId,numberOfTickets,totalAmount,status,mechanism,createdAt,durationMs";

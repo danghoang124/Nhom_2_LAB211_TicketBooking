@@ -49,11 +49,8 @@ public class SimulatorController {
         List<Seat> allSeats = seatRepository.findAll();
         for (Seat seat : allSeats) {
             if (matchId.equals(seat.getMatchId())) {
-                // Dùng setStatus + setVersion thay vì updateStatus() vì:
-                // updateStatus() tăng version trước, rồi setVersion(0) override → version = 0 (đúng)
-                // nhưng thứ tự ngược lại rõ ràng hơn nên dùng setter trực tiếp.
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seat.setVersion(0); // reset về 0 cho mỗi lần benchmark
+                // Reset ghế về trạng thái ban đầu cho benchmark
+                seat.reset(SeatStatus.AVAILABLE, 0);
             }
         }
         seatRepository.saveAll(allSeats);

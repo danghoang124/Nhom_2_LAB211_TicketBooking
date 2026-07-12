@@ -13,6 +13,10 @@ import java.util.List;
  */
 public class MatchRepository extends CsvRepository<Match> {
 
+    // ── Singleton ─────────────────────────────────────────────────────────────
+    private static final MatchRepository INSTANCE = new MatchRepository();
+    public static MatchRepository getInstance() { return INSTANCE; }
+
     private static final String FILE_PATH = "data/matches.csv";
     private static final String HEADER    =
         "matchId,stadiumId,homeTeam,awayTeam,matchDate,matchTime,status";

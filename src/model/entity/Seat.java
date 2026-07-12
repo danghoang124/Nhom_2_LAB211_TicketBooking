@@ -116,13 +116,24 @@ public class Seat extends BaseEntity {
         return version;
     }
 
-    @Deprecated
-    public void setStatus(SeatStatus status) {
+    private void setStatus(SeatStatus status) {
         this.status = status;
     }
 
-    @Deprecated
-    public void setVersion(int version) {
+    private void setVersion(int version) {
+        this.version = version;
+    }
+
+    /**
+     * Reset ghế về trạng thái ban đầu — dùng cho Simulator/benchmark.
+     * Encapsulate setStatus() + setVersion() để bên ngoài không thể set version tùy ý,
+     * giữ nguyên bất biến của Optimistic Locking.
+     *
+     * @param newStatus Trạng thái cần reset về (thường là AVAILABLE).
+     * @param version   Version khởi đầu (thường là 0).
+     */
+    public void reset(SeatStatus newStatus, int version) {
+        this.status = newStatus;
         this.version = version;
     }
 

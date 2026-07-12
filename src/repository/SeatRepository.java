@@ -21,6 +21,10 @@ import java.nio.channels.FileLock;
  */
 public class SeatRepository extends CsvRepository<Seat> {
 
+    // ── Singleton ─────────────────────────────────────────────────────────────
+    private static final SeatRepository INSTANCE = new SeatRepository();
+    public static SeatRepository getInstance() { return INSTANCE; }
+
     private static final String FILE_PATH = "data/seats.csv";
     private static final String HEADER    =
         "seatId,sectionId,matchId,rowLabel,seatNumber,status,version";

@@ -42,14 +42,14 @@ public class AppContext {
 
     // ── Constructor — wiring tất cả thành phần ─────────────────────────────────
     public AppContext() {
-        // 1. Khởi tạo Repositories
-        this.fanRepository = new FanRepository();
-        this.matchRepository = new MatchRepository();
-        this.seatRepository = new SeatRepository();
-        this.sectionRepository = new SectionRepository();
-        this.stadiumRepository = new StadiumRepository();
-        this.ticketRepository = new TicketRepository();
-        this.transactionRepository = new TransactionRepository();
+        // 1. Khởi tạo Repositories (Singleton — luôn dùng getInstance())
+        this.fanRepository = FanRepository.getInstance();
+        this.matchRepository = MatchRepository.getInstance();
+        this.seatRepository = SeatRepository.getInstance();
+        this.sectionRepository = SectionRepository.getInstance();
+        this.stadiumRepository = StadiumRepository.getInstance();
+        this.ticketRepository = TicketRepository.getInstance();
+        this.transactionRepository = TransactionRepository.getInstance();
 
         // 2. Khởi tạo Controllers (inject dependencies)
         this.adminController = new AdminController(

@@ -36,7 +36,7 @@ public class PerformanceTest {
         System.out.println("╚══════════════════════════════════════════════════════╝");
         System.out.println();
 
-        SeatRepository repo = new SeatRepository();
+        SeatRepository repo = SeatRepository.getInstance();
 
         // ── Warm-up (JVM JIT compile) ─────────────────────────────────────────
         System.out.printf("  [Warm-up] Chạy %d lần để JVM biên dịch JIT...%n", WARMUP_ROUNDS);

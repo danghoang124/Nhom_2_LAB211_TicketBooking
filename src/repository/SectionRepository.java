@@ -15,6 +15,10 @@ import java.util.Optional;
  */
 public class SectionRepository extends CsvRepository<Section> {
 
+    // ── Singleton ─────────────────────────────────────────────────────────────
+    private static final SectionRepository INSTANCE = new SectionRepository();
+    public static SectionRepository getInstance() { return INSTANCE; }
+
     private static final String FILE_PATH = "data/sections.csv";
     private static final String HEADER    = "sectionId,sectionType,totalRows,seatsPerRow,basePrice";
 

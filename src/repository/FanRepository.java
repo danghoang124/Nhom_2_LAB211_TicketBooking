@@ -17,6 +17,10 @@ import java.util.Optional;
  */
 public class FanRepository extends CsvRepository<Fan> {
 
+    // ── Singleton ─────────────────────────────────────────────────────────────
+    private static final FanRepository INSTANCE = new FanRepository();
+    public static FanRepository getInstance() { return INSTANCE; }
+
     private static final String FILE_PATH = "data/fans.csv";
     private static final String HEADER    =
         "fanId,username,passwordHash,fullName,email,phone,createdAt,isActive,role";

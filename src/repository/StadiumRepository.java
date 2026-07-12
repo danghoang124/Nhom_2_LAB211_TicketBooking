@@ -18,6 +18,10 @@ import java.util.List;
  */
 public class StadiumRepository extends CsvRepository<Stadium> {
 
+    // ── Singleton ─────────────────────────────────────────────────────────────
+    private static final StadiumRepository INSTANCE = new StadiumRepository();
+    public static StadiumRepository getInstance() { return INSTANCE; }
+
     private static final String FILE_PATH = "data/stadiums.csv";
     private static final String HEADER    = "stadiumId,name,city,address,totalCapacity";
 
