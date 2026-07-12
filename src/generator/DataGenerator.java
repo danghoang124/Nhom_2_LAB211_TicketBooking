@@ -50,18 +50,18 @@ public class DataGenerator {
     private static final String[] SECTION_TYPES = { "VIP", "STANDARD", "STANDING", "ECONOMY_LOWER" };
 
     private static final String[] TEAMS = {
-            "Hà Nội FC", "Hoàng Anh Gia Lai", "TP.HCM FC", "Bình Dương FC",
-            "Đà Nẵng FC", "Viettel FC", "Nam Định FC", "Thanh Hóa FC",
-            "Hải Phòng FC", "Long An FC", "Sông Lam Nghệ An", "Cần Thơ FC"
+            "Ha Noi FC", "Hoang Anh Gia Lai", "TP.HCM FC", "Binh Duong FC",
+            "Da Nang FC", "Viettel FC", "Nam Dinh FC", "Thanh Hoa FC",
+            "Hai Phong FC", "Long An FC", "Song Lam Nghe An", "Can Tho FC"
     };
 
     private static final String[] HO = // họ (family names)
-            { "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Phan", "Vũ", "Bùi", "Đỗ", "Hồ" };
+            { "Nguyen", "Tran", "Le", "Pham", "Hoang", "Phan", "Vu", "Bui", "Do", "Ho" };
     private static final String[] TEN_DEM = // tên đệm (middle names)
-            { "Văn", "Thị", "Minh", "Quốc", "Hữu", "Đức", "Thành", "Bảo", "Ngọc", "Xuân" };
+            { "Van", "Thi", "Minh", "Quoc", "Huu", "Duc", "Thanh", "Bao", "Ngoc", "Xuan" };
     private static final String[] TEN = // tên (given names)
-            { "An", "Bình", "Cường", "Dũng", "Phong", "Giang", "Hùng", "Khoa",
-                    "Minh", "Nam", "Phúc", "Quân", "Sơn", "Tú", "Vinh", "Xuân", "Yến" };
+            { "An", "Binh", "Cuong", "Dung", "Phong", "Giang", "Hung", "Khoa",
+                    "Minh", "Nam", "Phuc", "Quan", "Son", "Tu", "Vinh", "Xuan", "Yen" };
 
     // ── section capacity blueprint: { totalRows, seatsPerRow } ───────────────
     // VIP=200, STANDARD=600, STANDING=875, ECONOMY_LOWER=875
@@ -181,12 +181,12 @@ public class DataGenerator {
                 // Bug fix #4: totalCapacity now reflects the actual generated seat count
                 // per match (2,550 = 200 VIP + 600 STANDARD + 875 STANDING + 875 ECONOMY_LOWER)
                 // so capacity data is consistent with seats.csv.
-                new Stadium("STD001", "Sân Vận Động Mỹ Đình", "Hà Nội",
-                        "Phường Mỹ Đình II, Nam Từ Liêm, Hà Nội", 2_550),
-                new Stadium("STD002", "Sân Vận Động Thống Nhất", "TP.HCM",
-                        "138 Đặng Văn Bi, Thủ Đức, TP.HCM", 2_550),
-                new Stadium("STD003", "Sân Vận Động Pleiku", "Gia Lai",
-                        "Trần Nhật Duật, Pleiku, Gia Lai", 2_550));
+                new Stadium("STD001", "San Van Dong My Dinh", "Ha Noi",
+                        "Phuong My Dinh II, Nam Tu Liem, Ha Noi", 2_550),
+                new Stadium("STD002", "San Van Dong Thong Nhat", "TP.HCM",
+                        "138 Dang Van Bi, Thu Duc, TP.HCM", 2_550),
+                new Stadium("STD003", "San Van Dong Pleiku", "Gia Lai",
+                        "Tran Nhat Duat, Pleiku, Gia Lai", 2_550));
     }
 
     /**

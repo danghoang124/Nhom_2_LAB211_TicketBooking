@@ -56,17 +56,17 @@ public class LoginView {
         final int maxAttempts = FanController.MAX_LOGIN_ATTEMPTS;
 
         printDivider();
-        System.out.println("           ĐĂNG NHẬP HỆ THỐNG");
+        System.out.println("           SYSTEM LOGIN");
         printDivider();
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-            System.out.printf("%n[Lần thử %d/%d]%n", attempt, maxAttempts);
+            System.out.printf("%n[Attempt %d/%d]%n", attempt, maxAttempts);
 
             // ── Nhận input từ người dùng ──────────────────────────────────
-            System.out.print("  Tên đăng nhập : ");
+            System.out.print("  Username      : ");
             String username = scanner.nextLine();
 
-            System.out.print("  Mật khẩu      : ");
+            System.out.print("  Password      : ");
             String password = scanner.nextLine();
 
             // ── Gọi Controller xử lý ─────────────────────────────────────────────
@@ -83,24 +83,24 @@ public class LoginView {
                 Fan fan = fanController.getCurrentFan();
                 System.out.println();
                 printDivider();
-                System.out.printf("  ✓ Đăng nhập thành công!%n");
-                System.out.printf("  Xin chào, %s (ID: %s)%n", fan.getFullName(), fan.getFanId());
+                System.out.printf("  ✓ Login successful!%n");
+                System.out.printf("  Welcome, %s (ID: %s)%n", fan.getFullName(), fan.getFanId());
                 printDivider();
                 return true;
             } else {
                 String msg = (errorMessage != null) ? errorMessage
-                        : "Tên đăng nhập hoặc mật khẩu không đúng.";
+                        : "Invalid username or password.";
                 System.out.println("  ✗ " + msg);
                 if (attempt < maxAttempts) {
-                    System.out.printf("  Còn %d lần thử.%n", maxAttempts - attempt);
+                    System.out.printf("  %d attempts remaining.%n", maxAttempts - attempt);
                 }
             }
         }
 
         // Hết lần thử
         System.out.println();
-        System.out.println("  ✗ Đăng nhập thất bại sau " + maxAttempts + " lần thử.");
-        System.out.println("  Vui lòng thử lại sau hoặc đăng ký tài khoản mới.");
+        System.out.println("  ✗ Login failed after " + maxAttempts + " attempts.");
+        System.out.println("  Please try again later or register a new account.");
         printDivider();
         return false;
     }

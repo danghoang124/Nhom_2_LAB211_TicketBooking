@@ -351,22 +351,6 @@ public class MainView {
             return;
         }
 
-        // ── Cho user chọn cơ chế đồng bộ ─────────────────────────────────────
-        System.out.println("\nChoose synchronization mechanism:");
-        System.out.println("  1. SYNCHRONIZED (JVM lock — default, safe)");
-        System.out.println("  2. FILE_LOCK    (OS-level lock)");
-        System.out.println("  3. OPTIMISTIC   (Version-based, retry on conflict)");
-        System.out.println("  4. NO_LOCK      (No locking — unsafe, for testing only)");
-        System.out.print("Select (1-4, default 1): ");
-        String mechChoice = scanner.nextLine().trim();
-        LockMechanism mechanism;
-        switch (mechChoice) {
-            case "2": mechanism = LockMechanism.FILE_LOCK;    break;
-            case "3": mechanism = LockMechanism.OPTIMISTIC;   break;
-            case "4": mechanism = LockMechanism.NO_LOCK;      break;
-            default:  mechanism = LockMechanism.SYNCHRONIZED; break;
-        }
-
         // ── Process Payment (giả lập) ────────────────────────────────────────
         System.out.println("\n======================================");
         System.out.println("          PROCESS PAYMENT             ");
@@ -385,9 +369,16 @@ public class MainView {
         // ── Bước 2a: CONFIRM → BOOKED ────────────────────────────────────────
         boolean success = false;
         try {
+            // Sử dụng mặc định cơ chế an toàn nhất (SYNCHRONIZED) cho luồng người dùng thật
             success = bookingController.confirmBooking(
-                    currentFan.getFanId(), matchId, seatId, mechanism);
+                    currentFan.getFanId(), matchId, seatId, model.enums.LockMechanism.SYNCHRONIZED);
         } catch (exception.SeatAlreadyBookedException e) {
+            System.out.println("[FAILED] " + e.getMessage());
+            return;
+        } catch (exception.BookingLimitExceededException e) {
+            System.out.println("[FAILED] Limit Exceeded: " + e.getMessage());
+            return;
+        } catch (IllegalStateException e) {
             System.out.println("[FAILED] " + e.getMessage());
             return;
         }
@@ -429,11 +420,13 @@ public class MainView {
                     t.getPrice(),
                     t.getStatus().name(),
                     t.getBookedAt());
-            totalPrice += t.getPrice();
+            if (t.isValid()) {
+                totalPrice += t.getPrice();
+            }
         }
 
         System.out.println("-".repeat(90));
-        System.out.printf("Total: %d tickets | Total value: %,d VND%n", tickets.size(), totalPrice);
+        System.out.printf("Total: %d tickets | Total value: %,d VND (Valid tickets only)%n", tickets.size(), totalPrice);
 
         // ── Wire BookingView: delegate sang BookingView để tái sử dụng logic hủy vé ──
         System.out.println("\nDo you want to cancel a ticket? (y to cancel, Enter to skip): ");

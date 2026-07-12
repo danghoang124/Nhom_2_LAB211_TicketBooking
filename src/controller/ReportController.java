@@ -80,9 +80,9 @@ public class ReportController {
         return transactionRepository.findFailed().size();
     }
 
-    /** Tổng doanh thu (VND). */
+    /** Tổng doanh thu (VND). Chỉ tính từ vé hợp lệ (VALID). */
     public long getTotalRevenue() {
-        return transactionRepository.totalRevenue();
+        return ticketRepository.totalRevenue();
     }
 
     // ── Thống kê ghế theo trận ───────────────────────────────────────────────

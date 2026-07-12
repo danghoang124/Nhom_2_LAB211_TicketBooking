@@ -53,9 +53,9 @@ public class RegisterView {
      */
     public boolean show() {
         printDivider();
-        System.out.println("           ĐĂNG KÝ TÀI KHOẢN MỚI");
+        System.out.println("           REGISTER NEW ACCOUNT");
         printDivider();
-        System.out.println("  (Nhấn 0 + Enter để thoát đăng kí)");
+        System.out.println("  (Enter 0 to cancel registration)");
         System.out.println();
 
         // ── Nhận và validate input từng trường ─────────────────────────────
@@ -88,7 +88,7 @@ public class RegisterView {
             result = fanController.register(username, password, fullName, email, phone);
         } catch (UserAlreadyExistsException e) {
             printDivider();
-            System.out.println("  ✗ Đăng ký thất bại: " + e.getMessage());
+            System.out.println("  ✗ Registration failed: " + e.getMessage());
             printDivider();
             return false;
         }
@@ -97,8 +97,8 @@ public class RegisterView {
         if (result != null && result.isSuccess()) {
             printDivider();
             System.out.println("  ✓ " + result.getMessage());
-            System.out.printf("  ID của bạn: %s%n", result.getFan().getFanId());
-            System.out.println("  Bạn đã được tự động đăng nhập vào hệ thống.");
+            System.out.printf("  Your ID: %s%n", result.getFan().getFanId());
+            System.out.println("  You have been automatically logged in.");
             printDivider();
 
             fanController.setCurrentFan(result.getFan());
@@ -106,8 +106,8 @@ public class RegisterView {
 
         } else {
             printDivider();
-            String msg = (result != null) ? result.getMessage() : "Lỗi không xác định.";
-            System.out.println("  ✗ Đăng ký thất bại: " + msg);
+            String msg = (result != null) ? result.getMessage() : "Unknown error.";
+            System.out.println("  ✗ Registration failed: " + msg);
             printDivider();
             return false;
         }
@@ -126,7 +126,7 @@ public class RegisterView {
      */
     private String readUsername() {
         while (true) {
-            System.out.print("  Tên đăng nhập (chỉ chữ/số, ≥3 ký tự) : ");
+            System.out.print("  Username (alphanumeric, >=3 chars) : ");
             String input = scanner.nextLine();
 
             if ("0".equals(input)) {
@@ -134,21 +134,21 @@ public class RegisterView {
             }
 
             if (input.trim().isEmpty()) {
-                System.out.println("  ✗ Vui lòng nhập tên đăng nhập.!");
+                System.out.println("  ✗ Please enter a username!");
                 System.out.println();
                 continue;
             }
 
             if (!fanController.isValidUsername(input.trim())) {
-                System.out.println("  ✗ Định dạng không hợp lệ! Tên đăng nhập chỉ được chứa chữ cái và chữ số, không dấu cách, không ký tự đặc biệt.");
-                System.out.println("    Vui lòng nhập lại.");
+                System.out.println("  ✗ Invalid format! Username must be alphanumeric, no spaces, no special characters.");
+                System.out.println("    Please try again.");
                 System.out.println();
                 continue;
             }
 
             if (input.trim().length() < 3) {
-                System.out.println("  ✗ Tên đăng nhập phải có ít nhất 3 ký tự.");
-                System.out.println("    Vui lòng nhập lại.");
+                System.out.println("  ✗ Username must be at least 3 characters.");
+                System.out.println("    Please try again.");
                 System.out.println();
                 continue;
             }
@@ -165,7 +165,7 @@ public class RegisterView {
      */
     private String readPassword() {
         while (true) {
-            System.out.print("  Mật khẩu (ít nhất 6 ký tự)            : ");
+            System.out.print("  Password (at least 6 characters)      : ");
             String input = scanner.nextLine();
 
             if ("0".equals(input)) {
@@ -173,14 +173,14 @@ public class RegisterView {
             }
 
             if (input.trim().isEmpty()) {
-                System.out.println("  ✗ Vui lòng nhập mật khẩu.!");
+                System.out.println("  ✗ Please enter a password!");
                 System.out.println();
                 continue;
             }
 
             if (input.length() < 6) {
-                System.out.println("  ✗ Mật khẩu phải có ít nhất 6 ký tự.");
-                System.out.println("    Vui lòng nhập lại.");
+                System.out.println("  ✗ Password must be at least 6 characters.");
+                System.out.println("    Please try again.");
                 System.out.println();
                 continue;
             }
@@ -196,7 +196,7 @@ public class RegisterView {
      */
     private String readFullName() {
         while (true) {
-            System.out.print("  Họ và tên đầy đủ                      : ");
+            System.out.print("  Full Name                             : ");
             String input = scanner.nextLine();
 
             if ("0".equals(input)) {
@@ -204,7 +204,7 @@ public class RegisterView {
             }
 
             if (input.trim().isEmpty()) {
-                System.out.println("  ✗ Vui lòng nhập họ và tên.!");
+                System.out.println("  ✗ Please enter your full name!");
                 System.out.println();
                 continue;
             }
@@ -221,7 +221,7 @@ public class RegisterView {
      */
     private String readEmail() {
         while (true) {
-            System.out.print("  Email (ví dụ: abc@gmail.com)           : ");
+            System.out.print("  Email (e.g. abc@gmail.com)             : ");
             String input = scanner.nextLine();
 
             if ("0".equals(input)) {
@@ -229,14 +229,14 @@ public class RegisterView {
             }
 
             if (input.trim().isEmpty()) {
-                System.out.println("  ✗ Vui lòng nhập email.!");
+                System.out.println("  ✗ Please enter your email!");
                 System.out.println();
                 continue;
             }
 
             if (!input.trim().contains("@") || !input.trim().contains(".")) {
-                System.out.println("  ✗ Email không đúng định dạng (ví dụ: abc@gmail.com).");
-                System.out.println("    Vui lòng nhập lại.");
+                System.out.println("  ✗ Invalid email format (e.g. abc@gmail.com).");
+                System.out.println("    Please try again.");
                 System.out.println();
                 continue;
             }
@@ -253,7 +253,7 @@ public class RegisterView {
      */
     private String readPhone() {
         while (true) {
-            System.out.print("  Số điện thoại (10 số, bắt đầu 0)       : ");
+            System.out.print("  Phone number (10 digits, starts with 0): ");
             String input = scanner.nextLine();
 
             if ("0".equals(input)) {
@@ -261,14 +261,14 @@ public class RegisterView {
             }
 
             if (input.trim().isEmpty()) {
-                System.out.println("  ✗ Vui lòng nhập số điện thoại.!");
+                System.out.println("  ✗ Please enter your phone number!");
                 System.out.println();
                 continue;
             }
 
             if (!input.trim().matches("^0\\d{9}$")) {
-                System.out.println("  ✗ Số điện thoại phải có 10 chữ số và bắt đầu bằng 0.");
-                System.out.println("    Vui lòng nhập lại.");
+                System.out.println("  ✗ Phone number must have 10 digits and start with 0.");
+                System.out.println("    Please try again.");
                 System.out.println();
                 continue;
             }
@@ -295,7 +295,7 @@ public class RegisterView {
      */
     public void showFanMenu() {
         if (!fanController.isLoggedIn()) {
-            System.out.println("  [Lỗi] Bạn chưa đăng nhập.");
+            System.out.println("  [Error] You are not logged in.");
             return;
         }
 
@@ -304,14 +304,14 @@ public class RegisterView {
         while (true) {
             System.out.println();
             printDivider();
-            System.out.printf("  Xin chào, %s!%n", fanName);
-            System.out.println("  MENU CHÍNH");
+            System.out.printf("  Welcome, %s!%n", fanName);
+            System.out.println("  MAIN MENU");
             printDivider();
-            System.out.println("  1. Xem tất cả vé của tôi");
-            System.out.println("  2. Xem vé còn hiệu lực (VALID)");
-            System.out.println("  0. Đăng xuất");
+            System.out.println("  1. View all my tickets");
+            System.out.println("  2. View valid tickets");
+            System.out.println("  0. Logout");
             printDivider();
-            System.out.print("  Chọn chức năng: ");
+            System.out.print("  Select an option: ");
 
             String choice = scanner.nextLine().trim();
 
@@ -326,7 +326,7 @@ public class RegisterView {
                     handleLogout();
                     return; // thoát khỏi vòng lặp menu
                 default:
-                    System.out.println("  ✗ Lựa chọn không hợp lệ. Vui lòng chọn lại.");
+                    System.out.println("  ✗ Invalid option. Please try again.");
             }
         }
     }
@@ -345,13 +345,13 @@ public class RegisterView {
         List<Ticket> tickets = fanController.getMyTickets();
         System.out.println();
         printDivider();
-        System.out.println("  TẤT CẢ VÉ CỦA TÔI");
+        System.out.println("  ALL MY TICKETS");
         printDivider();
 
         if (tickets.isEmpty()) {
-            System.out.println("  Bạn chưa có vé nào.");
+            System.out.println("  You don't have any tickets yet.");
         } else {
-            System.out.printf("  Tổng số: %d vé%n%n", tickets.size());
+            System.out.printf("  Total: %d tickets%n%n", tickets.size());
             printTicketTableHeader();
             for (Ticket t : tickets) {
                 printTicketRow(t);
@@ -367,13 +367,13 @@ public class RegisterView {
         List<Ticket> tickets = fanController.getMyValidTickets();
         System.out.println();
         printDivider();
-        System.out.println("  VÉ CÒN HIỆU LỰC (VALID)");
+        System.out.println("  VALID TICKETS");
         printDivider();
 
         if (tickets.isEmpty()) {
-            System.out.println("  Bạn không có vé nào còn hiệu lực.");
+            System.out.println("  You don't have any valid tickets.");
         } else {
-            System.out.printf("  Tổng số: %d vé còn hiệu lực%n%n", tickets.size());
+            System.out.printf("  Total: %d valid tickets%n%n", tickets.size());
             printTicketTableHeader();
             for (Ticket t : tickets) {
                 printTicketRow(t);
@@ -394,7 +394,7 @@ public class RegisterView {
         fanController.logout();
         System.out.println();
         printDivider();
-        System.out.printf("  ✓ Đăng xuất thành công. Tạm biệt, %s!%n", fanName);
+        System.out.printf("  ✓ Logged out successfully. Goodbye, %s!%n", fanName);
         printDivider();
     }
 
@@ -405,7 +405,7 @@ public class RegisterView {
     /** In header bảng vé. */
     private void printTicketTableHeader() {
         System.out.printf("  %-14s %-12s %-10s %-20s %-10s%n",
-                "TICKET ID", "MATCH ID", "SEAT ID", "ĐẶT LÚC", "TRẠNG THÁI");
+                "TICKET ID", "MATCH ID", "SEAT ID", "BOOKED AT", "STATUS");
         System.out.println("  " + "-".repeat(72));
     }
 

@@ -89,27 +89,27 @@ public class FanController {
                                    String fullName, String email, String phone) {
 
         // ── Bước 1: Validate input không được rỗng ─────────────────────────
-        if (isBlank(username)) return RegisterResult.fail("Tên đăng nhập không được để trống.");
-        if (isBlank(password)) return RegisterResult.fail("Mật khẩu không được để trống.");
-        if (isBlank(fullName)) return RegisterResult.fail("Họ tên không được để trống.");
-        if (isBlank(email))    return RegisterResult.fail("Email không được để trống.");
-        if (isBlank(phone))    return RegisterResult.fail("Số điện thoại không được để trống.");
+        if (isBlank(username)) return RegisterResult.fail("Username cannot be empty.");
+        if (isBlank(password)) return RegisterResult.fail("Password cannot be empty.");
+        if (isBlank(fullName)) return RegisterResult.fail("Full name cannot be empty.");
+        if (isBlank(email))    return RegisterResult.fail("Email cannot be empty.");
+        if (isBlank(phone))    return RegisterResult.fail("Phone number cannot be empty.");
 
         // ── Bước 2: Validate độ dài và ký tự hợp lệ ───────────────────────
         if (!isValidUsername(username.trim())) {
-            return RegisterResult.fail("Tên đăng nhập chỉ được chứa chữ cái và chữ số (không dấu, không khoảng trắng, không ký tự đặc biệt).");
+            return RegisterResult.fail("Username must be alphanumeric, no spaces, no special characters.");
         }
         if (username.trim().length() < 3) {
-            return RegisterResult.fail("Tên đăng nhập phải có ít nhất 3 ký tự.");
+            return RegisterResult.fail("Username must be at least 3 characters.");
         }
         if (password.length() < 6) {
-            return RegisterResult.fail("Mật khẩu phải có ít nhất 6 ký tự.");
+            return RegisterResult.fail("Password must be at least 6 characters.");
         }
         if (!isValidEmail(email.trim())) {
-            return RegisterResult.fail("Email không đúng định dạng (ví dụ: abc@gmail.com).");
+            return RegisterResult.fail("Invalid email format (e.g. abc@gmail.com).");
         }
         if (!isValidPhone(phone.trim())) {
-            return RegisterResult.fail("Số điện thoại phải có 10 chữ số và bắt đầu bằng 0.");
+            return RegisterResult.fail("Phone number must have 10 digits and start with 0.");
         }
 
         // ── Bước 3: Kiểm tra username và email đã tồn tại chưa ────────────
@@ -117,17 +117,17 @@ public class FanController {
         // biết đây là lỗi nghiệp vụ rõ ràng — không phải lỗi validation thông thường.
         if (fanRepository.isUsernameTaken(username.trim())) {
             throw new UserAlreadyExistsException(
-                "Tên đăng nhập '" + username.trim() + "' đã được sử dụng.");
+                "Username '" + username.trim() + "' is already taken.");
         }
         if (fanRepository.isEmailTaken(email.trim())) {
             throw new UserAlreadyExistsException(
-                "Email '" + email.trim() + "' đã được đăng ký bởi tài khoản khác.");
+                "Email '" + email.trim() + "' is already registered by another account.");
         }
 
         // ── Bước 4: Hash mật khẩu SHA-256 ─────────────────────────────────
         String passwordHash = sha256(password);
         if (passwordHash == null) {
-            return RegisterResult.fail("Lỗi hệ thống: Không thể mã hóa mật khẩu.");
+            return RegisterResult.fail("System Error: Cannot hash password.");
         }
 
         // ── Bước 5: Sinh fanId mới ─────────────────────────────────────────
@@ -151,7 +151,7 @@ public class FanController {
         fanRepository.save(newFan);
 
         return RegisterResult.success(
-                "Đăng ký thành công! Chào mừng " + fullName.trim() + ".",
+                "Registration successful! Welcome " + fullName.trim() + ".",
                 newFan
         );
     }
@@ -197,7 +197,7 @@ public class FanController {
         // Ném InvalidCredentialsException thay vì return false.
         // Giúp View phân biệt "thông tin sai" với "lỗi hệ thống".
         throw new InvalidCredentialsException(
-            "Tên đăng nhập hoặc mật khẩu không đúng.");
+            "Invalid username or password.");
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -355,10 +355,18 @@ public class FanController {
      */
     private boolean isValidEmail(String email) {
         if (email == null) return false;
-        int atIndex = email.indexOf('@');
-        if (atIndex <= 0) return false;                         // không có '@' hoặc '@' ở đầu
-        String domain = email.substring(atIndex + 1);
-        return domain.contains(".") && domain.length() >= 3;   // phần sau '@' phải có dấu '.'
+        
+        // 1. Basic Regex for email format validation
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,10}$")) {
+            return false;
+        }
+        
+        // 2. Block common typos like @gmail.co (missing 'm')
+        if (email.toLowerCase().endsWith("@gmail.co")) {
+            return false;
+        }
+        
+        return true;
     }
 
     /**

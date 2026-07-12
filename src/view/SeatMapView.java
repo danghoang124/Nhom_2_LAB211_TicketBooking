@@ -55,15 +55,15 @@ public class SeatMapView {
      */
     public static void displayMatchList(List<Match> matches) {
         System.out.println("\n╔══════════════════════════════════════════════════════╗");
-        System.out.println("║         DANH SÁCH TRẬN ĐẤU ĐANG MỞ BÁN VÉ          ║");
+        System.out.println("║         MATCHES CURRENTLY OPEN FOR BOOKING           ║");
         System.out.println("╚══════════════════════════════════════════════════════╝");
 
         if (matches == null || matches.isEmpty()) {
-            System.out.println("  [!] Hiện tại không có trận đấu nào đang mở bán vé.");
+            System.out.println("  [!] There are currently no matches open for booking.");
             return;
         }
 
-        System.out.printf("  %-4s %-12s %-38s %-10s%n", "STT", "Mã trận", "Đội thi đấu", "Ngày giờ");
+        System.out.printf("  %-4s %-12s %-38s %-10s%n", "No.", "Match ID", "Teams", "Date & Time");
         System.out.println("  " + "-".repeat(68));
 
         for (int i = 0; i < matches.size(); i++) {
@@ -88,16 +88,16 @@ public class SeatMapView {
      */
     public static void displaySectionList(List<Section> sections) {
         System.out.println("\n╔══════════════════════════════════════════════════════╗");
-        System.out.println("║              DANH SÁCH KHÁN ĐÀI                     ║");
+        System.out.println("║                 AVAILABLE SECTIONS                   ║");
         System.out.println("╚══════════════════════════════════════════════════════╝");
 
         if (sections == null || sections.isEmpty()) {
-            System.out.println("  [!] Không có khán đài nào trong hệ thống.");
+            System.out.println("  [!] No sections found in the system.");
             return;
         }
 
         System.out.printf("  %-4s %-8s %-14s %-12s %-20s%n",
-                "STT", "Mã KĐ", "Loại", "Sức chứa", "Giá vé");
+                "No.", "Sec ID", "Type", "Capacity", "Price");
         System.out.println("  " + "-".repeat(62));
 
         for (int i = 0; i < sections.size(); i++) {
@@ -131,7 +131,7 @@ public class SeatMapView {
     public static void displaySeatMap(Seat[][] seatMap, Section section,
                                        String matchId, int availableCount) {
         if (seatMap == null || section == null) {
-            System.out.println("[!] Không có dữ liệu sơ đồ ghế để hiển thị.");
+            System.out.println("[!] No seat map data available to display.");
             return;
         }
 
@@ -140,15 +140,15 @@ public class SeatMapView {
 
         // ── Header ───────────────────────────────────────────────────────────
         System.out.println("\n" + "=".repeat(60));
-        System.out.printf("  SƠ ĐỒ GHẾ — KHÁN ĐÀI: %s (%s) | Trận: %s%n",
+        System.out.printf("  SEAT MAP - SECTION: %s (%s) | Match: %s%n",
                 section.getSectionId(), section.getSectionType().name(), matchId);
-        System.out.printf("  Cấu hình: %d hàng × %d ghế/hàng (Tổng: %d ghế)%n",
+        System.out.printf("  Configuration: %d rows × %d seats/row (Total: %d seats)%n",
                 rows, cols, section.getTotalCapacity());
-        System.out.printf("  Ghế còn trống: %d / %d%n", availableCount, section.getTotalCapacity());
+        System.out.printf("  Available seats: %d / %d%n", availableCount, section.getTotalCapacity());
         System.out.println("=".repeat(60));
 
         // ── Chú thích ký hiệu ─────────────────────────────────────────────────
-        System.out.printf("  Ký hiệu:  %s Trống   %s Đã bán   %s Đang khóa%n%n",
+        System.out.printf("  Legend:   %s Available   %s Booked   %s Locked%n%n",
                 SYMBOL_AVAILABLE, SYMBOL_BOOKED, SYMBOL_LOCKED);
 
         // ── Banner sân bóng ───────────────────────────────────────────────────
@@ -254,7 +254,7 @@ public class SeatMapView {
         // Mỗi ghế chiếm 4 ký tự (" [ ]"), cộng thêm 7 ký tự prefix ("  A    ")
         int bannerWidth = cols * 4 + 7;
         String border   = "  +" + "-".repeat(bannerWidth - 4) + "+";
-        String text     = "HƯỚNG NHÌN VỀ SÂN BÓNG (FIELD)";
+        String text     = "FIELD DIRECTION (STAGE)";
 
         // Căn giữa text
         int padTotal    = bannerWidth - 4 - text.length();

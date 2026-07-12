@@ -151,6 +151,27 @@ public class BookingController {
                     TransactionStatus.FAILED, mechanism, startTime);
             return false;
         }
+
+        // Business logic validation: Cannot confirm booking if the match is no longer SCHEDULED
+        Optional<Match> matchOpt = matchRepository.findById(matchId);
+        if (matchOpt.isPresent() && matchOpt.get().getStatus() != MatchStatus.SCHEDULED) {
+            createTransaction(transactionId, fanId, matchId, 1, 0L,
+                    TransactionStatus.FAILED, mechanism, startTime);
+            throw new IllegalStateException(
+                "Match is no longer open for booking (Status: " + matchOpt.get().getStatus().name() + ").");
+        }
+
+        // Anti-scalping limit: Max 4 valid tickets per user per match
+        long validTicketCount = ticketRepository.findValidTickets(fanId).stream()
+                .filter(t -> matchId.equals(t.getMatchId()))
+                .count();
+        if (validTicketCount >= 4) {
+            createTransaction(transactionId, fanId, matchId, 1, 0L,
+                    TransactionStatus.FAILED, mechanism, startTime);
+            throw new exception.BookingLimitExceededException(
+                "You have reached the maximum limit of 4 tickets for this match.");
+        }
+
         Seat seat = seatOpt.get();
 
         // Lấy giá vé từ Section
@@ -437,15 +458,27 @@ public class BookingController {
     /**
      * Hủy vé đã đặt (VALID → CANCELLED) và phục hồi ghế (BOOKED → AVAILABLE).
      *
+     * @param fanId    ID của user đang yêu cầu hủy (dùng để kiểm tra quyền sở hữu).
      * @param ticketId ID vé cần hủy.
      * @return {@code true} nếu hủy thành công.
      */
-    public boolean cancelBooking(String ticketId) {
+    public boolean cancelBooking(String fanId, String ticketId) {
         Optional<Ticket> ticketOpt = ticketRepository.findById(ticketId);
         if (!ticketOpt.isPresent() || ticketOpt.get().isCancelled()) {
             return false;
         }
         Ticket ticket = ticketOpt.get();
+
+        // Security validation: Only the ticket owner can cancel it
+        if (!ticket.getFanId().equals(fanId)) {
+            throw new IllegalArgumentException("Access Denied: You do not own this ticket.");
+        }
+
+        // Business logic validation: Cannot cancel a ticket if the match is no longer SCHEDULED
+        Optional<Match> matchOpt = matchRepository.findById(ticket.getMatchId());
+        if (matchOpt.isPresent() && matchOpt.get().getStatus() != MatchStatus.SCHEDULED) {
+            throw new IllegalStateException("Cannot cancel a ticket for a match that is already " + matchOpt.get().getStatus().name() + ".");
+        }
 
         // Hủy vé
         ticket.setStatus(TicketStatus.CANCELLED);

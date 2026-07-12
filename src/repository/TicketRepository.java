@@ -154,4 +154,14 @@ public class TicketRepository extends CsvRepository<Ticket> {
     public List<Ticket> findByStatus(TicketStatus status) {
         return findByCondition(t -> status != null && status == t.getStatus());
     }
+
+    /**
+     * Tính tổng doanh thu từ tất cả các vé VALID.
+     * Vé CANCELLED sẽ không được tính.
+     */
+    public long totalRevenue() {
+        return findByStatus(TicketStatus.VALID).stream()
+                .mapToLong(Ticket::getPrice)
+                .sum();
+    }
 }

@@ -26,11 +26,11 @@ public class BookingView {
 
     public void displayMenu() {
         while (true) {
-            System.out.println("\n=== HỆ THỐNG ĐẶT VÉ ===");
-            System.out.println("1. Đặt vé");
-            System.out.println("2. Hủy vé");
-            System.out.println("0. Thoát");
-            System.out.print("Chọn chức năng: ");
+            System.out.println("\n=== TICKET BOOKING SYSTEM ===");
+            System.out.println("1. Book a ticket");
+            System.out.println("2. Cancel a ticket");
+            System.out.println("0. Exit");
+            System.out.print("Select an option: ");
             String choice = scanner.nextLine();
 
             switch (choice) {
@@ -43,25 +43,25 @@ public class BookingView {
                 case "0":
                     return;
                 default:
-                    System.out.println("Lựa chọn không hợp lệ, vui lòng chọn lại.");
+                    System.out.println("Invalid option, please try again.");
             }
         }
     }
 
     private void handleBooking() {
-        System.out.println("\n--- THỰC HIỆN ĐẶT VÉ ---");
+        System.out.println("\n--- BOOK A TICKET ---");
 
         // Lấy fanId từ session hiện tại — không prompt để tránh giả mạo fan khác
         if (!fanController.isLoggedIn()) {
-            System.out.println("[FAILED] Bạn chưa đăng nhập.");
+            System.out.println("[FAILED] You are not logged in.");
             return;
         }
         String fanId = fanController.getCurrentFan().getFanId();
 
-        System.out.print("Nhập mã Trận đấu (Match ID): ");
+        System.out.print("Enter Match ID: ");
         String matchId = scanner.nextLine().trim();
 
-        System.out.print("Nhập mã Ghế (Seat ID): ");
+        System.out.print("Enter Seat ID: ");
         String seatId = scanner.nextLine().trim();
 
         LockMechanism mechanism = chooseMechanism();
@@ -69,9 +69,9 @@ public class BookingView {
         boolean result = bookingController.bookSeat(fanId, matchId, seatId, mechanism);
 
         if (result) {
-            System.out.println("-> Đặt vé THÀNH CÔNG! Ghế " + seatId + " đã thuộc về bạn.");
+            System.out.println("-> [SUCCESS] Ticket booked! Seat " + seatId + " is yours.");
         } else {
-            System.out.println("-> Đặt vé THẤT BẠI! Ghế đã được đặt hoặc hệ thống gặp sự cố.");
+            System.out.println("-> [FAILED] Seat already booked or system error.");
         }
     }
 
@@ -80,25 +80,36 @@ public class BookingView {
      * sau khi user xem danh sách vé và muốn hủy.
      */
     public void handleCancellation() {
-        System.out.println("\n--- THỰC HIỆN HỦY VÉ ---");
-        System.out.print("Nhập mã Vé (Ticket ID) cần hủy: ");
-        String ticketId = scanner.nextLine();
+        System.out.println("\n--- TICKET CANCELLATION ---");
+        
+        if (!fanController.isLoggedIn()) {
+            System.out.println("[FAILED] You are not logged in.");
+            return;
+        }
+        String fanId = fanController.getCurrentFan().getFanId();
 
-        boolean result = bookingController.cancelBooking(ticketId);
-        if (result) {
-            System.out.println("--> Hủy vé THÀNH CÔNG! Ghế đã được trống.");
-        } else {
-            System.out.println("--> Hủy vé THẤT BẠI! Không tìm thấy vé hoặc vé đã bị hủy.");
+        System.out.print("Enter Ticket ID to cancel: ");
+        String ticketId = scanner.nextLine().trim();
+
+        try {
+            boolean result = bookingController.cancelBooking(fanId, ticketId);
+            if (result) {
+                System.out.println("--> [SUCCESS] Ticket cancelled successfully. Seat is now available.");
+            } else {
+                System.out.println("--> [FAILED] Ticket not found or already cancelled.");
+            }
+        } catch (Exception e) {
+            System.out.println("--> [FAILED] " + e.getMessage());
         }
     }
 
     private LockMechanism chooseMechanism() {
-        System.out.println("\nChọn cơ chế đồng bộ:");
-        System.out.println("  1. NO_LOCK      — không khóa (dễ Double Booking)");
-        System.out.println("  2. SYNCHRONIZED — synchronized block");
-        System.out.println("  3. FILE_LOCK    — Java NIO FileLock");
-        System.out.println("  4. OPTIMISTIC   — version-based lock");
-        System.out.print("Chọn (1-4, mặc định 1): ");
+        System.out.println("\nChoose synchronization mechanism:");
+        System.out.println("  1. NO_LOCK      - No lock (susceptible to double booking)");
+        System.out.println("  2. SYNCHRONIZED - Synchronized block");
+        System.out.println("  3. FILE_LOCK    - Java NIO FileLock");
+        System.out.println("  4. OPTIMISTIC   - Version-based lock");
+        System.out.print("Select (1-4, default 1): ");
         String choice = scanner.nextLine().trim();
         switch (choice) {
             case "2": return LockMechanism.SYNCHRONIZED;
