@@ -70,9 +70,10 @@ public class MainView {
     }
 
     private boolean showGuestMenu() {
-        System.out.println("\n=== LOGIN MENU ===");
+        System.out.println("\n=== GUEST MENU ===");
         System.out.println("1. Login");
         System.out.println("2. Register new account");
+        System.out.println("3. View match list");
         System.out.println("0. Return to main menu");
         System.out.print("Select an option: ");
 
@@ -83,6 +84,9 @@ public class MainView {
                 return false;
             case "2":
                 registerView.show();
+                return false;
+            case "3":
+                showMatchList();
                 return false;
             case "0":
                 return true;
@@ -361,6 +365,21 @@ public class MainView {
             case "3": mechanism = LockMechanism.OPTIMISTIC;   break;
             case "4": mechanism = LockMechanism.NO_LOCK;      break;
             default:  mechanism = LockMechanism.SYNCHRONIZED; break;
+        }
+
+        // ── Process Payment (giả lập) ────────────────────────────────────────
+        System.out.println("\n======================================");
+        System.out.println("          PROCESS PAYMENT             ");
+        System.out.println("======================================");
+        System.out.printf("  Amount to pay: %,d VND%n", price);
+        System.out.println("======================================");
+        System.out.print("Do you want to pay? (y/n): ");
+        String paymentChoice = scanner.nextLine().trim().toLowerCase();
+
+        if (!"y".equals(paymentChoice)) {
+            bookingController.cancelLockedSeat(seatId);
+            System.out.println("[INFO] Payment cancelled. Seat " + seatId + " released.");
+            return;
         }
 
         // ── Bước 2a: CONFIRM → BOOKED ────────────────────────────────────────

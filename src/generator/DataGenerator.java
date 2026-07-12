@@ -272,11 +272,11 @@ public class DataGenerator {
 
     /**
      * Generates {@code count} fans with realistic Vietnamese names and unique
-     * usernames.
+     * usernames, plus one default admin account (admin / admin123).
      * Passwords are SHA-256 hashed (hex, upper-case).
      */
     static List<Fan> generateFans(int count) {
-        List<Fan> result = new ArrayList<>(count);
+        List<Fan> result = new ArrayList<>(count + 1);
         Set<String> usedUsernames = new HashSet<>();
         Set<String> usedPhones = new HashSet<>();
 
@@ -314,6 +314,15 @@ public class DataGenerator {
                     fmt("FAN%04d", i),
                     username, pwHash, fullName, email, phone, created, true, "FAN"));
         }
+
+        // ── Default admin account ────────────────────────────────────────────
+        String adminPwHash = sha256("admin123");
+        String adminCreated = LocalDateTime.now().format(DATETIME_FMT);
+        result.add(new Fan(
+                fmt("FAN%04d", count + 1),
+                "admin", adminPwHash, "System Administrator",
+                "admin@system.vn", "0900000000", adminCreated, true, "ADMIN"));
+
         return result;
     }
 
@@ -471,7 +480,7 @@ public class DataGenerator {
         System.out.printf("║  %-20s  %,10d shared sections     ║%n", "Sections", sections.size());
         System.out.printf("║  %-20s  %,10d records             ║%n", "Matches", matches.size());
         System.out.printf("║  %-20s  %,10d records  ✓ ≥10,000  ║%n", "Seats", seats.size());
-        System.out.printf("║  %-20s  %,10d records             ║%n", "Fans", fans.size());
+        System.out.printf("║  %-20s  %,10d records  (+1 admin) ║%n", "Fans", fans.size() - 1);
         System.out.printf("║  %-20s  %,10d records  (runtime)  ║%n", "Tickets", 0);
         System.out.printf("║  %-20s  %,10d records  (runtime)  ║%n", "Transactions", 0);
         System.out.println("╠══════════════════════════════════════════════════════╣");
