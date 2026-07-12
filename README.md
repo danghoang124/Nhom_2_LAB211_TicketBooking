@@ -1,284 +1,297 @@
-# 🏟️ Stadium Ticket Booking Simulation — LAB211
+# Nhóm 4 — LAB211: Stadium Ticket Booking Simulation
 
 > **FPT University · LAB211 · Nhóm 4**  
 > Mô phỏng hệ thống đặt vé sân vận động có khả năng xử lý đặt vé đồng thời (concurrent booking), so sánh hiệu năng 4 cơ chế đồng bộ hoá trên nền CSV thuần (không dùng database).
 
 ---
 
-## 👥 Thành viên nhóm
+## Thành viên nhóm
 
 | STT | Họ tên | Vai trò |
 |-----|--------|---------|
 | 1 | Hoàng Minh Hải Đăng | Entity · Enum · BaseEntity · CsvRepository · DataGenerator |
-| 2 | Đặng Xuân Thiện | BookingController · SimulatorController · fix logic |
+| 2 | Đặng Xuân Thiện | BookingController · SimulatorController · Fix logic |
 | 3 | Đinh Vũ Phương Khánh | FanController · View Layer · AppContext · MVC Wiring |
 | 4 | Đỗ Đình Văn | ReportController · Performance Analysis · Test |
 
 ---
 
-## 📋 Mục lục
+## Mô tả dự án
 
-- [Tính năng](#-tính-năng)
-- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
-- [Dữ liệu CSV](#-dữ-liệu-csv)
-- [Cơ chế đồng bộ hoá](#-cơ-chế-đồng-bộ-hoá)
-- [Cài đặt và chạy](#-cài-đặt-và-chạy)
-- [Chạy JUnit Test](#-chạy-junit-test)
-- [Sơ đồ Use Case](#-sơ-đồ-use-case)
+Hệ thống mô phỏng đặt vé sân vận động bóng đá chạy trên console.  
+Fan có thể đăng ký, đăng nhập, chọn khu vực, đặt ghế và xem lịch sử vé.  
+Hệ thống hỗ trợ **4 cơ chế đồng bộ** để kiểm tra tình huống nhiều Fan đặt cùng một ghế cùng lúc (Concurrent Booking Simulator).
 
 ---
 
-## ✨ Tính năng
+## Yêu cầu hệ thống
 
-### Guest
-- Đăng ký tài khoản Fan mới (mật khẩu SHA-256)
-
-### Fan
-- Đăng nhập / Đăng xuất (session in-memory)
-- Xem danh sách trận đấu
-- Xem sơ đồ ghế ngồi theo trận
-- Đặt vé / Huỷ vé
-- Xem lịch sử vé và giao dịch của bản thân
-
-### Admin
-- Quản lý Sân vận động (CRUD)
-- Quản lý Khu vực ghế / Trận đấu (CRUD)
-- Xem báo cáo thống kê hệ thống
-
-### System
-- Chạy mô phỏng đặt vé đồng thời (Concurrent Simulator)
-- So sánh 4 cơ chế khoá: `NO_LOCK`, `FILE_LOCK`, `SYNCHRONIZED`, `OPTIMISTIC`
-- Đo throughput (TPS) và tỉ lệ Double Booking
+- **Java 17+** (đã test trên JDK 17.0.12)
+- **Không cần database** — toàn bộ dữ liệu lưu trong file CSV
+- **Không cần Maven/Gradle** — compile thủ công bằng `javac`
+- Thư viện JUnit 5 có sẵn trong thư mục `lib/`
 
 ---
 
-## 🏗️ Kiến trúc hệ thống
+## Cách chạy
 
-Dự án tuân theo mô hình **MVC thuần (console)**:
+Mở Terminal (Ctrl+``  ``), đổi sang CMD nếu đang là PowerShell, rồi chạy:
+```cmd
+     chcp 65001
+     javac -encoding UTF-8 -d out -cp "src\lib\*" src\main\Main.java
+java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "out;src\lib\*" main.Main
+     Hoặc compile toàn bộ source một lần:
+```cmd
+     chcp 65001
+     dir /s /b src\*.java > sources.txt
+     dir /s /b test\*.java >> sources.txt
+     javac -encoding UTF-8 -d out -cp "src\lib\*" @sources.txt
+     java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "out;src\lib\*" main.Main
+
+Sau khi chương trình khởi động, chọn **1**:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        VIEW LAYER                        │
-│  MainView · LoginView · RegisterView · BookingView       │
-│  AdminView · ReportView · SeatMapView · SimulatorView    │
-└────────────────────┬────────────────────────────────────┘
-                     │  gọi
-┌────────────────────▼────────────────────────────────────┐
-│                    CONTROLLER LAYER                      │
-│  FanController · BookingController · AdminController     │
-│  ReportController · SimulatorController                  │
-└────────────────────┬────────────────────────────────────┘
-                     │  gọi
-┌────────────────────▼────────────────────────────────────┐
-│                   REPOSITORY LAYER                       │
-│  CsvRepository<T> (abstract base)                        │
-│  FanRepo · SeatRepo · TicketRepo · TransactionRepo ...   │
-└────────────────────┬────────────────────────────────────┘
-                     │  đọc/ghi
-┌────────────────────▼────────────────────────────────────┐
-│                    CSV STORAGE (data/)                   │
-│  fans · stadiums · sections · matches · seats            │
-│  tickets · transactions                                  │
-└─────────────────────────────────────────────────────────┘
+=== STADIUM TICKET BOOKING SIMULATION (LAB211) ===
+1. Run Data Generator (DataGenerator)   ← chọn 1, chờ vài giây
 ```
 
-**Nguyên tắc bắt buộc:**
-- View → chỉ nhận input và hiển thị output, không có business logic
-- Controller → xử lý nghiệp vụ, không đọc/ghi file trực tiếp
-- Repository → duy nhất được thao tác CSV
+Kết quả — các file CSV được tạo tự động trong `data/`:
+
+| File CSV | Nội dung |
+|----------|----------|
+| `stadiums.csv` | 3 sân vận động |
+| `sections.csv` | 4 khu vực ghế (dùng chung cho tất cả sân) |
+| `matches.csv` | 12 trận đấu (4 trận/sân × 3 sân) |
+| `seats.csv` | 34,440 ghế (≥ 10,000 theo yêu cầu ✓) |
+| `fans.csv` | 500 fan mẫu (mật khẩu SHA-256) |
+| `tickets.csv` | Trống — tạo khi Fan đặt vé |
+| `transactions.csv` | Trống — tạo bởi Simulator |
 
 ---
 
-## 📁 Cấu trúc thư mục
+## Menu chính
+
+```
+======================================================
+            STADIUM TICKET BOOKING SIMULATION
+                 FPT UNIVERSITY - LAB211
+======================================================
+
+=== STADIUM TICKET BOOKING SIMULATION (LAB211) ===
+1. Run Data Generator (DataGenerator)
+2. View System Configuration (Stadiums, Seats...)
+3. Run Performance Benchmarks (PerformanceTest)
+4. Enter Ticket System (Login / Book / Report)
+5. Run Concurrent Simulator
+0. Exit
+```
+
+---
+
+## Tài khoản demo
+
+Sau khi chạy DataGenerator (menu 1), dùng tài khoản seed:
+
+| Role | Username | Password |
+|------|----------|----------|
+| Fan | `anv` | `password1` |
+| Fan | `bnb` | `password2` |
+| Admin | `admin` | `admin123` |
+
+---
+
+## Cấu trúc thư mục
 
 ```
 Nhom_4_LAB211_TicketBooking-main/
 ├── src/
 │   ├── main/
-│   │   ├── Main.java              ← Entry point
-│   │   └── AppContext.java        ← Khởi tạo và wire tất cả dependencies
-│   ├── model/
-│   │   ├── entity/                ← Fan, Match, Seat, Ticket, Stadium, Section, BookingTransaction
-│   │   └── enums/                 ← SeatStatus, TicketStatus, LockMechanism, MatchStatus ...
-│   ├── repository/
-│   │   ├── CsvRepository.java     ← Abstract base: findAll, findById, save, append, delete
-│   │   ├── FanRepository.java
-│   │   ├── SeatRepository.java    ← + updateStatusOptimistic()
-│   │   ├── TicketRepository.java  ← + existsBySeatAndMatch() chống Double Booking
-│   │   └── ...
+│   │   ├── Main.java                  ← Entry point — menu chính
+│   │   └── AppContext.java            ← DI Container thủ công (wire tất cả dependencies)
 │   ├── controller/
-│   │   ├── FanController.java     ← register, login, logout, getMyTickets
-│   │   ├── BookingController.java ← bookSeat, cancelBooking (4 cơ chế khoá)
-│   │   ├── SimulatorController.java ← concurrent simulation với CountDownLatch
-│   │   ├── ReportController.java
-│   │   └── ...
+│   │   ├── FanController.java         ← register, login, logout, getMyTickets
+│   │   ├── BookingController.java     ← bookSeat, cancelBooking (4 cơ chế khoá)
+│   │   ├── AdminController.java       ← CRUD Stadium / Section / Match
+│   │   ├── ReportController.java      ← thống kê vé, giao dịch, doanh thu
+│   │   ├── SimulatorController.java   ← concurrent simulation, CountDownLatch
+│   │   └── StadiumController.java
 │   ├── view/
-│   │   ├── MainView.java          ← Menu chính sau khi đăng nhập
+│   │   ├── MainView.java              ← Menu sau khi đăng nhập
 │   │   ├── LoginView.java
 │   │   ├── RegisterView.java
-│   │   └── ...
-│   ├── exception/                 ← Custom exceptions
+│   │   ├── BookingView.java
+│   │   ├── AdminView.java
+│   │   ├── ReportView.java
+│   │   ├── SeatMapView.java
+│   │   └── SimulatorView.java
+│   ├── model/
+│   │   ├── entity/                    ← Fan, Seat, Ticket, Match, Section, Stadium, BookingTransaction
+│   │   └── enums/                     ← SeatStatus, TicketStatus, LockMechanism, SectionType, Role...
+│   ├── repository/
+│   │   ├── CsvRepository.java         ← Abstract base: findAll, findById, save, append, delete
+│   │   ├── SeatRepository.java        ← + updateStatusOptimistic()
+│   │   ├── TicketRepository.java      ← + existsBySeatAndMatch() (chống Double Booking)
+│   │   └── ... (7 repository)
+│   ├── exception/                     ← 6 custom exceptions
 │   ├── generator/
-│   │   └── DataGenerator.java     ← Sinh dữ liệu CSV ban đầu
-│   └── test/
-│       ├── BookingTest.java
-│       ├── ModelTest.java
-│       ├── RepositoryTest.java
-│       ├── ControllerTest.java
-│       └── MainViewIntegrationTest.java
-├── data/
-│   ├── stadiums.csv               ← 3 sân vận động
-│   ├── sections.csv               ← 4 khu vực (dùng chung)
-│   ├── matches.csv                ← 12 trận đấu
-│   ├── seats.csv                  ← 34,440 ghế (≥ 10,000 yêu cầu ✓)
-│   ├── fans.csv                   ← 500 fan (seed data)
-│   ├── tickets.csv                ← Trống ban đầu, tạo lúc runtime
-│   └── transactions.csv           ← Trống ban đầu, tạo bởi Simulator
-├── lib/
-│   ├── junit-jupiter-5.14.0.jar
-│   └── ... (8 JUnit jars)
+│   │   └── DataGenerator.java         ← Sinh toàn bộ dữ liệu CSV ban đầu
+│   ├── benchmark/
+│   │   └── PerformanceTest.java       ← Đo tốc độ đọc ≥ 10,000 dòng < 500ms
+│   └── experiment/
+│       └── RunExperiment.java         ← Chạy benchmark tự động: 6 mức thread × 4 cơ chế
+│                                         Xuất kết quả ra data/simulation_results.csv
+├── test/                              ← JUnit 5 tests (ngoài src/)
+│   ├── BookingTest.java
+│   ├── ControllerTest.java
+│   ├── MainViewIntegrationTest.java
+│   ├── ModelTest.java
+│   └── RepositoryTest.java
+├── data/                              ← CSV files (tự tạo khi chọn menu 1)
+├── lib/                               ← JUnit 5 jars
 ├── docs/
-│   ├── csv_schema.md
+│   ├── csv_schema.md                  ← Schema tất cả CSV
 │   ├── UseCase_diagram.png
-│   └── CLASS DIAGRAM ...png
-├── ai_logs/
-│   └── AI_AuditLog_Thien.xlsx
-└── .vscode/settings.json
+│   ├── CLASS DIAGRAM (MODEL).png
+│   ├── CLASS DIAGRAM (REPOSITORY).png
+│   └── LAB211_TicketBooking_De_Tai.pdf
+├── ai_logs/                           ← AI Audit Log từng thành viên
+└── README.md
 ```
 
 ---
 
-## 🗄️ Dữ liệu CSV
+## Kiến trúc hệ thống
 
-### Seed data (sinh bởi DataGenerator)
+Dự án áp dụng **MVC Architecture** thuần console:
 
-| File | Số dòng | Ghi chú |
-|------|---------|---------|
-| `stadiums.csv` | 3 | Mỹ Đình, Thống Nhất, Pleiku |
-| `sections.csv` | 4 | VIP · STANDARD · STANDING · ECONOMY_LOWER |
-| `matches.csv` | 12 | 4 trận/sân × 3 sân |
-| `seats.csv` | **34,440** | 2,870 ghế/trận × 12 trận |
-| `fans.csv` | 500 | Tài khoản seed, mật khẩu SHA-256 |
-| `tickets.csv` | 0 | Tạo khi Fan đặt vé |
-| `transactions.csv` | 0 | Tạo bởi Simulator |
+```
+┌──────────────────────────────────────────────────┐
+│                   VIEW LAYER                      │
+│  MainView · LoginView · RegisterView · BookingView│
+│  AdminView · ReportView · SimulatorView           │
+│  Chỉ: nhận input từ Scanner, in output ra màn hình│
+└───────────────────┬──────────────────────────────┘
+                    │ gọi method
+┌───────────────────▼──────────────────────────────┐
+│                CONTROLLER LAYER                   │
+│  FanController · BookingController               │
+│  AdminController · ReportController              │
+│  SimulatorController                             │
+│  Xử lý: validate, hash, sinh ID, quản lý session │
+└───────────────────┬──────────────────────────────┘
+                    │ gọi method
+┌───────────────────▼──────────────────────────────┐
+│                REPOSITORY LAYER                   │
+│  CsvRepository<T> (abstract) + 7 concrete repos  │
+│  Duy nhất được đọc/ghi file CSV                  │
+└───────────────────┬──────────────────────────────┘
+                    │ đọc/ghi
+┌───────────────────▼──────────────────────────────┐
+│               CSV STORAGE (data/)                 │
+│  fans · stadiums · sections · matches            │
+│  seats · tickets · transactions                  │
+└──────────────────────────────────────────────────┘
+```
 
-### Giá vé theo khu vực
-
-| Khu vực | Giá (VND) | Hàng × Ghế/hàng | Tổng ghế/trận |
-|---------|-----------|-----------------|---------------|
-| VIP | 500,000 | 10 × 20 | 200 |
-| STANDARD | 200,000 | 20 × 30 | 600 |
-| STANDING | 100,000 | 25 × 35 | 875 |
-| ECONOMY_LOWER | 80,000 | 25 × 35 | 875 |
-| **Tổng** | — | — | **2,550/trận** |
+**Nguyên tắc cứng:**
+- View **không** đọc/ghi CSV trực tiếp
+- Controller **không** in ra màn hình
+- Repository **không** chứa business logic
 
 ---
 
-## 🔒 Cơ chế đồng bộ hoá
+## Giá vé theo khu vực
 
-Simulator chạy N thread đồng thời tranh đặt cùng 1 ghế, đo 2 chỉ số:
+| Khu vực | Mã | Giá (VND) | Hàng × Ghế/hàng | Tổng/trận |
+|---------|----|-----------|-----------------|-----------|
+| VIP | SEC001 | 500,000 | 10 × 20 | 200 |
+| STANDARD | SEC002 | 200,000 | 20 × 30 | 600 |
+| STANDING | SEC003 | 100,000 | 25 × 35 | 875 |
+| ECONOMY_LOWER | SEC004 | 80,000 | 25 × 35 | 875 |
+| **Tổng** | | | | **2,550/trận** |
+
+---
+
+## Concurrent Booking Simulator
+
+Menu chính → chọn **5. Run Concurrent Simulator**
+
+Mô phỏng N thread đồng thời tranh đặt cùng 1 ghế. So sánh 4 cơ chế:
 
 | Cơ chế | Mô tả | Double Booking | Throughput |
 |--------|-------|---------------|------------|
-| `NO_LOCK` | Không khoá — race condition tự do | ❌ Cao | ✅ Cao nhất |
-| `FILE_LOCK` | Java NIO `FileLock` — khoá ở tầng OS | ✅ Không | ⚠️ Chậm nhất |
-| `SYNCHRONIZED` | `synchronized` block trong Repository | ✅ Không | ✅ Tốt |
-| `OPTIMISTIC` | So sánh `version` trước khi ghi (OCC) | ✅ Không | ✅ Tốt nhất trong khoá |
+| `NO_LOCK` | Không khoá — race condition tự do | ❌ Xảy ra | ✅ Cao nhất |
+| `FILE_LOCK` | Java NIO `FileLock` — khoá tầng OS | ✅ Ngăn chặn | ⚠️ Chậm nhất |
+| `SYNCHRONIZED` | `synchronized` block trong Repository | ✅ Ngăn chặn | ✅ Tốt |
+| `OPTIMISTIC` | So sánh `version` trước khi ghi (OCC) | ✅ Ngăn chặn | ✅ Tốt nhất |
 
-**Double Booking Rate** = số lần đặt thành công vượt quá 1 / tổng số thread  
-**Throughput (TPS)** = số thread / thời gian xử lý (giây)
+> **Double Booking** = cùng 1 ghế bán cho 2 Fan khác nhau.
+
+### Chạy benchmark tự động (RunExperiment)
+
+Để lấy kết quả đầy đủ với 6 mức thread (10, 50, 100, 200, 500, 1000) × 4 cơ chế:
+
+```cmd
+java -Dfile.encoding=UTF-8 -cp "bin;lib\*" experiment.RunExperiment
+```
+
+Kết quả xuất ra `data/simulation_results.csv` và in bảng tổng hợp trực tiếp ra màn hình.
 
 ---
 
-## 🚀 Cài đặt và chạy
-
-### Yêu cầu
-- **JDK 17+** (dùng Java Record, `String.repeat()`, `List.of()`)
-- Không cần Maven/Gradle, không cần database
-
-### Bước 1 — Sinh dữ liệu CSV
-
-```cmd
-chcp 65001
-cd Nhom_4_LAB211_TicketBooking-main
-dir /s /b src\*.java > sources.txt
-javac -encoding UTF-8 -d bin -cp "lib\*" @sources.txt
-java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "bin;lib\*" main.Main
-```
-
-Chọn **1. Khởi chạy bộ tạo dữ liệu** để sinh CSV ban đầu.
-
-### Bước 2 — Chạy ứng dụng
-
-```cmd
-java "-Dfile.encoding=UTF-8" "-Dstdout.encoding=UTF-8" -cp "bin;lib\*" main.Main
-```
-
-Hoặc dùng file `run.bat` đã có sẵn:
-
-```cmd
-run.bat
-```
-
-### Menu chính
+## Vòng đời trạng thái ghế
 
 ```
-=== HỆ THỐNG MÔ PHỎNG ĐẶT VÉ SÂN VẬN ĐỘNG (LAB211) ===
-1. Khởi chạy bộ tạo dữ liệu (DataGenerator)
-2. Xem cấu hình hệ thống
-3. Chạy kiểm thử hiệu năng (Performance Benchmarks)
-4. Đăng nhập (Fan / Admin)
-5. Đăng ký tài khoản mới (Fan)
-0. Thoát
+AVAILABLE ──→ LOCKED ──→ BOOKED
+                 └──→ AVAILABLE  (nếu Fan huỷ giữ chỗ)
 ```
-
-### Tài khoản demo
-
-| Role | Username | Password |
-|------|----------|----------|
-| Fan | `anv` | `password1` |
-| Admin | `admin` | `admin123` |
 
 ---
 
-## 🧪 Chạy JUnit Test
+## Chạy JUnit Tests
 
+>Lưu ý quan trọng: Project chỉ có 1 jar JUnit là junit-platform-console-standalone-1.10.2.jar nằm trong src/lib/. File này đã bao gồm toàn bộ JUnit 5 — đủ để chạy test, không cần thêm jar nào khác.
+>Bước 1 — Compile tất cả (nếu chưa compile)
 ```cmd
-java -jar lib\junit-platform-console-standalone-1.10.2.jar ^
-     --class-path "bin;lib\*" ^
-     --scan-class-path
+--chcp 65001
+--dir /s /b src\*.java > sources.txt
+--dir /s /b test\*.java >> sources.txt
+--javac -encoding UTF-8 -d out -cp "src\lib\*" @sources.txt
+--Bước 2 — Chạy toàn bộ test
 ```
+```cmd
+--java -cp "out;src\lib\*" ^
+--  org.junit.platform.console.ConsoleLauncher ^
+--  --select-package=test
+--Bước 3 — Chạy từng file test riêng lẻ (nếu cần)
+```cmd
+--java -cp "out;src\lib\*" ^
+--  org.junit.platform.console.ConsoleLauncher ^
+--  --select-class=test.BookingTest
+
+--java -cp "out;src\lib\*" ^
+--  org.junit.platform.console.ConsoleLauncher ^
+--  --select-class=test.ModelTest
+
+--java -cp "out;src\lib\*" ^
+--  org.junit.platform.console.ConsoleLauncher ^
+--  --select-class=test.RepositoryTest
+
+--java -cp "out;src\lib\*" ^
+--  org.junit.platform.console.ConsoleLauncher ^
+--  --select-class=test.ControllerTest
 
 | File test | Nội dung |
 |-----------|---------|
 | `ModelTest.java` | Entity round-trip CSV, enum parse, splitCsvLine |
 | `RepositoryTest.java` | CsvRepository CRUD, findByCondition, append |
 | `BookingTest.java` | bookSeat success/fail, cancelBooking, createTicket |
-| `ControllerTest.java` | StadiumController CRUD, SeatMapView |
-| `MainViewIntegrationTest.java` | Integration flow Fan login → booking |
+| `ControllerTest.java` | StadiumController, SeatMapView |
+| `MainViewIntegrationTest.java` | Integration flow: Fan login → booking |
 
 ---
 
-## 📊 Sơ đồ Use Case
+## Ghi chú AI
 
-Xem file `docs/UseCase_diagram.png` để biết đầy đủ luồng của 3 actor:
-
-```
-Guest  → Register Account · View Match List
-Fan    → Login · Logout · View Match List · Book Seat
-         View Seat Map · Process Payment · View My Tickets
-Admin  → CRUD Stadium/Section/Match · View Performance Report
-System → Run Concurrent Simulator
-```
-
----
-
-## 📝 Ghi chú kỹ thuật
-
-- **Không dùng database** — toàn bộ persistence qua file CSV với `BufferedReader`/`BufferedWriter` (256KB buffer)
-- **Optimistic Locking** — trường `version` trong `Seat` tăng mỗi lần cập nhật, `SeatRepository.updateStatusOptimistic()` so sánh version trước khi ghi
-- **Thread-safety** — `generateNextFanId()` dùng `synchronized`, ID sinh ra dạng `TKT%08d`/`TXN%08d` (AtomicLong counter)
-- **Password security** — SHA-256 hex uppercase, không lưu plaintext
-- **CSV encoding** — UTF-8 toàn bộ, RFC-4180 compliant (field có dấu phẩy được bọc nháy kép)
-- **Performance** — đọc 34,440 dòng `seats.csv` trong < 500ms (deliverable T4 ✓)
+Dự án ghi nhận việc sử dụng AI hỗ trợ trong quá trình phát triển.  
+Chi tiết xem tại thư mục `ai_logs/` — mỗi thành viên có file log riêng ghi rõ prompt, output và đánh giá phản biện.
