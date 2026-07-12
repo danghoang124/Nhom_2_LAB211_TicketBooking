@@ -55,24 +55,30 @@ public class RegisterView {
         printDivider();
         System.out.println("           ĐĂNG KÝ TÀI KHOẢN MỚI");
         printDivider();
-        System.out.println("  (Nhấn Enter để bỏ trống — sẽ hiện thông báo lỗi)");
+        System.out.println("  (Nhấn 0 + Enter để thoát đăng kí)");
         System.out.println();
 
-        // ── Nhận input từ người dùng ──────────────────────────────────────
-        System.out.print("  Tên đăng nhập (ít nhất 3 ký tự)  : ");
-        String username = scanner.nextLine();
+        // ── Nhận và validate input từng trường ─────────────────────────────
 
-        System.out.print("  Mật khẩu (ít nhất 6 ký tự)       : ");
-        String password = scanner.nextLine();
+        // 1. Tên đăng nhập
+        String username = readUsername();
+        if (username == null) return false;
 
-        System.out.print("  Họ và tên đầy đủ                  : ");
-        String fullName = scanner.nextLine();
+        // 2. Mật khẩu
+        String password = readPassword();
+        if (password == null) return false;
 
-        System.out.print("  Email (ví dụ: abc@gmail.com)      : ");
-        String email = scanner.nextLine();
+        // 3. Họ và tên đầy đủ
+        String fullName = readFullName();
+        if (fullName == null) return false;
 
-        System.out.print("  Số điện thoại (10 số, bắt đầu 0)  : ");
-        String phone = scanner.nextLine();
+        // 4. Email
+        String email = readEmail();
+        if (email == null) return false;
+
+        // 5. Số điện thoại
+        String phone = readPhone();
+        if (phone == null) return false;
 
         System.out.println();
 
@@ -81,7 +87,6 @@ public class RegisterView {
         try {
             result = fanController.register(username, password, fullName, email, phone);
         } catch (UserAlreadyExistsException e) {
-            // Username hoặc email trùng — hiển thị thông báo rõ ràng
             printDivider();
             System.out.println("  ✗ Đăng ký thất bại: " + e.getMessage());
             printDivider();
@@ -96,11 +101,6 @@ public class RegisterView {
             System.out.println("  Bạn đã được tự động đăng nhập vào hệ thống.");
             printDivider();
 
-            // Auto-login sau khi đăng ký thành công.
-            // KHÔNG gọi fanController.login(username, password) vì login() sẽ
-            // sha256(password) một lần nữa → sha256(sha256(password)) không khớp
-            // với sha256(password) đã lưu trong CSV → luôn thất bại (double-hash bug).
-            // Thay vào đó: set currentFan trực tiếp từ Fan vừa tạo.
             fanController.setCurrentFan(result.getFan());
             return true;
 
@@ -110,6 +110,170 @@ public class RegisterView {
             System.out.println("  ✗ Đăng ký thất bại: " + msg);
             printDivider();
             return false;
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // PHƯƠNG THỨC NHẬP DỮ LIỆU TỪNG TRƯỜNG
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Nhập tên đăng nhập với validation:
+     * - Không được bỏ trống
+     * - Chỉ chứa chữ cái và chữ số (không dấu, không khoảng trắng, không ký tự đặc biệt)
+     * - Ít nhất 3 ký tự
+     * - Nhấn 0 để thoát
+     */
+    private String readUsername() {
+        while (true) {
+            System.out.print("  Tên đăng nhập (chỉ chữ/số, ≥3 ký tự) : ");
+            String input = scanner.nextLine();
+
+            if ("0".equals(input)) {
+                return null;
+            }
+
+            if (input.trim().isEmpty()) {
+                System.out.println("  ✗ Vui lòng nhập tên đăng nhập.!");
+                System.out.println();
+                continue;
+            }
+
+            if (!fanController.isValidUsername(input.trim())) {
+                System.out.println("  ✗ Định dạng không hợp lệ! Tên đăng nhập chỉ được chứa chữ cái và chữ số, không dấu cách, không ký tự đặc biệt.");
+                System.out.println("    Vui lòng nhập lại.");
+                System.out.println();
+                continue;
+            }
+
+            if (input.trim().length() < 3) {
+                System.out.println("  ✗ Tên đăng nhập phải có ít nhất 3 ký tự.");
+                System.out.println("    Vui lòng nhập lại.");
+                System.out.println();
+                continue;
+            }
+
+            return input.trim();
+        }
+    }
+
+    /**
+     * Nhập mật khẩu với validation:
+     * - Không được bỏ trống
+     * - Ít nhất 6 ký tự
+     * - Nhấn 0 để thoát
+     */
+    private String readPassword() {
+        while (true) {
+            System.out.print("  Mật khẩu (ít nhất 6 ký tự)            : ");
+            String input = scanner.nextLine();
+
+            if ("0".equals(input)) {
+                return null;
+            }
+
+            if (input.trim().isEmpty()) {
+                System.out.println("  ✗ Vui lòng nhập mật khẩu.!");
+                System.out.println();
+                continue;
+            }
+
+            if (input.length() < 6) {
+                System.out.println("  ✗ Mật khẩu phải có ít nhất 6 ký tự.");
+                System.out.println("    Vui lòng nhập lại.");
+                System.out.println();
+                continue;
+            }
+
+            return input;
+        }
+    }
+
+    /**
+     * Nhập họ tên với validation:
+     * - Không được bỏ trống
+     * - Nhấn 0 để thoát
+     */
+    private String readFullName() {
+        while (true) {
+            System.out.print("  Họ và tên đầy đủ                      : ");
+            String input = scanner.nextLine();
+
+            if ("0".equals(input)) {
+                return null;
+            }
+
+            if (input.trim().isEmpty()) {
+                System.out.println("  ✗ Vui lòng nhập họ và tên.!");
+                System.out.println();
+                continue;
+            }
+
+            return input.trim();
+        }
+    }
+
+    /**
+     * Nhập email với validation:
+     * - Không được bỏ trống
+     * - Phải đúng định dạng email
+     * - Nhấn 0 để thoát
+     */
+    private String readEmail() {
+        while (true) {
+            System.out.print("  Email (ví dụ: abc@gmail.com)           : ");
+            String input = scanner.nextLine();
+
+            if ("0".equals(input)) {
+                return null;
+            }
+
+            if (input.trim().isEmpty()) {
+                System.out.println("  ✗ Vui lòng nhập email.!");
+                System.out.println();
+                continue;
+            }
+
+            if (!input.trim().contains("@") || !input.trim().contains(".")) {
+                System.out.println("  ✗ Email không đúng định dạng (ví dụ: abc@gmail.com).");
+                System.out.println("    Vui lòng nhập lại.");
+                System.out.println();
+                continue;
+            }
+
+            return input.trim();
+        }
+    }
+
+    /**
+     * Nhập số điện thoại với validation:
+     * - Không được bỏ trống
+     * - Phải 10 chữ số, bắt đầu bằng 0
+     * - Nhấn 0 để thoát
+     */
+    private String readPhone() {
+        while (true) {
+            System.out.print("  Số điện thoại (10 số, bắt đầu 0)       : ");
+            String input = scanner.nextLine();
+
+            if ("0".equals(input)) {
+                return null;
+            }
+
+            if (input.trim().isEmpty()) {
+                System.out.println("  ✗ Vui lòng nhập số điện thoại.!");
+                System.out.println();
+                continue;
+            }
+
+            if (!input.trim().matches("^0\\d{9}$")) {
+                System.out.println("  ✗ Số điện thoại phải có 10 chữ số và bắt đầu bằng 0.");
+                System.out.println("    Vui lòng nhập lại.");
+                System.out.println();
+                continue;
+            }
+
+            return input.trim();
         }
     }
 

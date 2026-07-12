@@ -97,6 +97,9 @@ public class FanController {
         if (isBlank(phone))    return RegisterResult.fail("Số điện thoại không được để trống.");
 
         // ── Bước 2: Validate độ dài và ký tự hợp lệ ───────────────────────
+        if (!isValidUsername(username.trim())) {
+            return RegisterResult.fail("Tên đăng nhập chỉ được chứa chữ cái và chữ số (không dấu, không khoảng trắng, không ký tự đặc biệt).");
+        }
         if (username.trim().length() < 3) {
             return RegisterResult.fail("Tên đăng nhập phải có ít nhất 3 ký tự.");
         }
@@ -369,6 +372,18 @@ public class FanController {
     private boolean isValidPhone(String phone) {
         if (phone == null) return false;
         return phone.matches("^0\\d{9}$"); // bắt đầu 0, tiếp theo 9 chữ số
+    }
+
+    /**
+     * Validate tên đăng nhập: chỉ cho phép chữ cái ASCII và chữ số.
+     * Không cho phép dấu cách, ký tự đặc biệt, hoặc dấu tiếng Việt.
+     *
+     * @param username Tên đăng nhập cần kiểm tra.
+     * @return true nếu hợp lệ (chỉ chứa [a-zA-Z0-9]).
+     */
+    public boolean isValidUsername(String username) {
+        if (username == null) return false;
+        return username.matches("^[a-zA-Z0-9]+$");
     }
 
     // ═════════════════════════════════════════════════════════════════════════
