@@ -44,6 +44,17 @@ public class SimulatorController {
     }
 
     public void resetData(String matchId) {
+        // Reset match status về SCHEDULED để simulation có thể đặt vé.
+        // Nếu match đang ở COMPLETED/ONGOING, bookSeat() sẽ reject mọi request.
+        java.util.Optional<model.entity.Match> matchOpt = matchRepository.findById(matchId);
+        if (matchOpt.isPresent()) {
+            model.entity.Match match = matchOpt.get();
+            if (match.getStatus() != model.enums.MatchStatus.SCHEDULED) {
+                match.setStatus(model.enums.MatchStatus.SCHEDULED);
+                matchRepository.save(match);
+            }
+        }
+
         // Load TẤT CẢ seats (không chỉ theo matchId) để không ghi đè mất data của match khác.
         // Bug cũ: findByMatch() chỉ lấy một phần, saveAll() ghi lại toàn bộ file → xoá seats match khác.
         List<Seat> allSeats = seatRepository.findAll();

@@ -2,12 +2,6 @@ package controller;
 
 import exception.InvalidCredentialsException;
 import exception.UserAlreadyExistsException;
-import model.entity.Fan;
-import model.entity.Ticket;
-import model.enums.Role;
-import repository.FanRepository;
-import repository.TicketRepository;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +9,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import model.entity.Fan;
+import model.entity.Ticket;
+import model.enums.Role;
+import repository.FanRepository;
+import repository.TicketRepository;
 
 /**
  * Controller xử lý logic nghiệp vụ cho Fan:
@@ -383,7 +382,7 @@ public class FanController {
      */
     public boolean isValidUsername(String username) {
         if (username == null) return false;
-        return username.matches("^[a-zA-Z0-9]+$");
+        return username.matches("^[a-zA-Z0-9_]+$");
     }
 
     // ═════════════════════════════════════════════════════════════════════════
