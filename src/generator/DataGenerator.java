@@ -17,7 +17,7 @@ import java.util.*;
  * <li>stadiums.csv — 3 stadiums</li>
  * <li>sections.csv — 4 sections (shared across all stadiums)</li>
  * <li>matches.csv — 12 matches (4 per stadium)</li>
- * <li>seats.csv — 34,440 rows ≥ 10,000 requirement ✓</li>
+ * <li>seats.csv — 30,600 rows ≥ 10,000 requirement ✓</li>
  * <li>fans.csv — 500 fans</li>
  * <li>tickets.csv — empty (populated at runtime)</li>
  * <li>transactions.csv — empty (populated by Simulator)</li>
@@ -178,12 +178,15 @@ public class DataGenerator {
      */
     static List<Stadium> generateStadiums() {
         return List.of(
+                // Bug fix #4: totalCapacity now reflects the actual generated seat count
+                // per match (2,550 = 200 VIP + 600 STANDARD + 875 STANDING + 875 ECONOMY_LOWER)
+                // so capacity data is consistent with seats.csv.
                 new Stadium("STD001", "Sân Vận Động Mỹ Đình", "Hà Nội",
-                        "Phường Mỹ Đình II, Nam Từ Liêm, Hà Nội", 40_192),
+                        "Phường Mỹ Đình II, Nam Từ Liêm, Hà Nội", 2_550),
                 new Stadium("STD002", "Sân Vận Động Thống Nhất", "TP.HCM",
-                        "138 Đặng Văn Bi, Thủ Đức, TP.HCM", 15_000),
+                        "138 Đặng Văn Bi, Thủ Đức, TP.HCM", 2_550),
                 new Stadium("STD003", "Sân Vận Động Pleiku", "Gia Lai",
-                        "Trần Nhật Duật, Pleiku, Gia Lai", 12_000));
+                        "Trần Nhật Duật, Pleiku, Gia Lai", 2_550));
     }
 
     /**
@@ -211,10 +214,17 @@ public class DataGenerator {
     static List<Match> generateMatches(List<Stadium> stadiums) {
         List<Match> result = new ArrayList<>();
         int counter = 1;
-        LocalDate baseDate = LocalDate.of(2025, 1, 15);
-        String[] times = { "16:00", "18:00", "19:30", "20:00" };
-        String[] statuses = { "SCHEDULED", "SCHEDULED", "SCHEDULED", "COMPLETED" };
+        // Bug fix #1 & #2: use LocalDate.now() so matches are always relative to
+        // the current date.  The COMPLETED match is placed in the PAST (−4 weeks)
+        // and the three SCHEDULED matches are placed in the FUTURE (+1/+2/+3 weeks)
+        // so chronology is always correct regardless of when the generator is run.
+        LocalDate now = LocalDate.now();
+        String[] times    = { "16:00", "18:00", "19:30", "20:00" };
+        // offsets in weeks relative to today: negative = past (completed), positive = future
+        int[]    weekOffsets = { -4, 1, 2, 3 };           // COMPLETED first, then SCHEDULED
+        String[] statuses    = { "COMPLETED", "SCHEDULED", "SCHEDULED", "SCHEDULED" };
 
+        int stIdx = 0; // stadium index (0,1,2) — used to offset SCHEDULED dates
         for (Stadium s : stadiums) {
             // Shuffle teams so each stadium has a different set of matchups
             List<String> teams = new ArrayList<>(Arrays.asList(TEAMS));
@@ -223,12 +233,18 @@ public class DataGenerator {
             for (int i = 0; i < 4; i++) {
                 String home = teams.get(i * 2 % teams.size());
                 String away = teams.get((i * 2 + 1) % teams.size());
-                LocalDate date = baseDate.plusWeeks(counter); // spread dates out
+                // COMPLETED (i==0): always 4 weeks in the past — fixed, independent of stadium.
+                // SCHEDULED (i>0):  spread by stadium (stIdx*4) + match slot (weekOffsets[i])
+                //                   so each stadium's games land on distinct future weeks.
+                LocalDate date = (i == 0)
+                        ? now.minusWeeks(4)
+                        : now.plusWeeks(weekOffsets[i] + (long) stIdx * 4);
                 result.add(new Match(
                         fmt("MATCH%03d", counter++),
                         s.stadiumId(), home, away,
                         date.format(DATE_FMT), times[i], statuses[i]));
             }
+            stIdx++; // advance stadium index for next stadium's SCHEDULED date offset
         }
         return result;
     }
@@ -237,7 +253,7 @@ public class DataGenerator {
      * Creates one seat record per (section × match × row × seatNumber).
      *
      * <p>
-     * Formula: 2,870 seats/stadium × 4 matches × 3 stadiums = <b>34,440 rows</b>
+     * Formula: 2,550 seats/match × 12 matches = <b>30,600 rows</b>
      * — well above the 10,000 minimum requirement.
      *
      * <p>
@@ -280,6 +296,14 @@ public class DataGenerator {
         Set<String> usedUsernames = new HashSet<>();
         Set<String> usedPhones = new HashSet<>();
 
+        // Bug fix #5: reserve admin phone BEFORE the fan loop so no fan can
+        // accidentally receive the same number as the hardcoded admin account.
+        usedPhones.add("0900000000");
+
+        // Bug fix #6: use a fixed base date + seeded RNG offset instead of
+        // LocalDateTime.now() so fans.csv is fully reproducible across runs.
+        LocalDateTime createdAtBase = LocalDateTime.of(2026, 7, 1, 0, 0, 0);
+
         for (int i = 1; i <= count; i++) {
             String ho = HO[RNG.nextInt(HO.length)];
             String tenDem = TEN_DEM[RNG.nextInt(TEN_DEM.length)];
@@ -305,7 +329,8 @@ public class DataGenerator {
             } while (usedPhones.contains(phone));
             usedPhones.add(phone);
 
-            String created = LocalDateTime.now()
+            // Reproducible timestamp: fixed base minus a seeded-random day offset
+            String created = createdAtBase
                     .minusDays(RNG.nextInt(730)) // registered within last 2 years
                     .format(DATETIME_FMT);
             String pwHash = sha256("password" + i);

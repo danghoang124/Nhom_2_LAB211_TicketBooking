@@ -1,2 +1,1 @@
 ticketId,fanId,seatId,matchId,transactionId,price,bookedAt,status
-TKT00000001,FAN0501,SEAT000001,MATCH001,TXN00000001,500000,2026-07-08 00:09:23,CANCELLED
