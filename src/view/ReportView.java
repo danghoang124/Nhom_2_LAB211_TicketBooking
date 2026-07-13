@@ -388,21 +388,29 @@ public class ReportView {
             return;
         }
 
-        System.out.printf("%-12s %-35s %-12s %-8s %-12s%n",
-                "Match ID", "Title", "Date", "Time", "Available");
-        System.out.println("-".repeat(85));
+        System.out.printf("%-12s %-35s %-8s %-10s %-10s %-12s %-10s %-15s%n",
+                "Match ID", "Title", "Time", "Total", "Booked", "Available", "Sold", "Revenue (VND)");
+        System.out.println("-".repeat(115));
 
         for (Match match : matches) {
-            int available = reportController.getMatchSeatSummary(match.getMatchId())[2];
+            int[] summary = reportController.getMatchSeatSummary(match.getMatchId());
+            int total = summary[0];
+            int booked = summary[1];
+            int available = summary[2];
+            int sold = reportController.getSoldTicketCount(match.getMatchId());
+            long revenue = reportController.getMatchRevenue(match.getMatchId());
 
-            System.out.printf("%-12s %-35s %-12s %-8s %,12d%n",
+            System.out.printf("%-12s %-35s %-8s %-10d %-10d %-12d %-10d %,15d%n",
                     match.getMatchId(),
                     match.getTitle(),
-                    match.getMatchDate(),
                     match.getMatchTime(),
-                    available);
+                    total,
+                    booked,
+                    available,
+                    sold,
+                    revenue);
         }
 
-        System.out.println("-".repeat(85));
+        System.out.println("-".repeat(115));
     }
 }

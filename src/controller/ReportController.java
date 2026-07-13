@@ -125,6 +125,14 @@ public class ReportController {
         return ticketRepository.countSoldTickets(matchId);
     }
 
+    /** Tổng doanh thu (VND) từ vé VALID của một trận. */
+    public long getMatchRevenue(String matchId) {
+        return ticketRepository.findByMatch(matchId).stream()
+                .filter(Ticket::isValid)
+                .mapToLong(Ticket::getPrice)
+                .sum();
+    }
+
     // ── Doanh thu theo Section Type ──────────────────────────────────────────
 
     /**

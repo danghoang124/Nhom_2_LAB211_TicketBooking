@@ -3,6 +3,7 @@ package view;
 import controller.FanController;
 import exception.InvalidCredentialsException;
 import model.entity.Fan;
+import model.enums.Role;
 
 import java.util.Scanner;
 
@@ -84,7 +85,11 @@ public class LoginView {
                 System.out.println();
                 printDivider();
                 System.out.printf("  ✓ Login successful!%n");
-                System.out.printf("  Welcome, %s (ID: %s)%n", fan.getFullName(), fan.getFanId());
+                if (fan.getRole() == Role.ADMIN) {
+                    System.out.printf("  Welcome, %s%n", fan.getFullName());
+                } else {
+                    System.out.printf("  Welcome, %s (ID: %s)%n", fan.getFullName(), fan.getFanId());
+                }
                 printDivider();
                 return true;
             } else {

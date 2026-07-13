@@ -118,18 +118,22 @@ public class AdminView {
     }
 
     private void viewStadium() {
-        System.out.print("Enter Stadium ID: ");
-        String id = scanner.nextLine().trim();
-        try {
-            Stadium s = adminController.getStadium(id);
-            System.out.println("\n=== STADIUM DETAIL ===");
-            System.out.println("  ID       : " + s.getStadiumId());
-            System.out.println("  Name     : " + s.getName());
-            System.out.println("  City     : " + s.getCity());
-            System.out.println("  Address  : " + s.getAddress());
-            System.out.printf("  Capacity : %,d seats%n", s.getTotalCapacity());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.print("Enter Stadium ID (0 to cancel): ");
+            String id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                Stadium s = adminController.getStadium(id);
+                System.out.println("\n=== STADIUM DETAIL ===");
+                System.out.println("  ID       : " + s.getStadiumId());
+                System.out.println("  Name     : " + s.getName());
+                System.out.println("  City     : " + s.getCity());
+                System.out.println("  Address  : " + s.getAddress());
+                System.out.printf("  Capacity : %,d seats%n", s.getTotalCapacity());
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
     }
 
@@ -144,7 +148,8 @@ public class AdminView {
         System.out.print("Address: ");
         String address = scanner.nextLine().trim();
         System.out.print("Total Capacity: ");
-        int capacity = parseIntOrDefault(scanner.nextLine().trim(), 0);
+        int capacity = parseIntWithValidation(scanner.nextLine().trim(), "Capacity");
+        if (capacity == Integer.MIN_VALUE) return;
 
         try {
             Stadium s = adminController.createStadium(id, name, city, address, capacity);
@@ -156,18 +161,21 @@ public class AdminView {
 
     private void updateStadium() {
         System.out.println("\n--- UPDATE STADIUM ---");
-        System.out.print("Stadium ID to update: ");
-        String id = scanner.nextLine().trim();
-
-        // Hiển thị thông tin hiện tại
-        try {
-            Stadium current = adminController.getStadium(id);
-            System.out.printf("Current: %s | %s | %s | Capacity: %,d%n",
-                    current.getName(), current.getCity(),
-                    current.getAddress(), current.getTotalCapacity());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
-            return;
+        Stadium current;
+        String id;
+        while (true) {
+            System.out.print("Stadium ID to update (0 to cancel): ");
+            id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                current = adminController.getStadium(id);
+                System.out.printf("Current: %s | %s | %s | Capacity: %,d%n",
+                        current.getName(), current.getCity(),
+                        current.getAddress(), current.getTotalCapacity());
+                break;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
 
         System.out.print("New Name (Enter to keep): ");
@@ -177,11 +185,10 @@ public class AdminView {
         System.out.print("New Address (Enter to keep): ");
         String address = scanner.nextLine().trim();
         System.out.print("New Capacity (0 to keep): ");
-        int capacity = parseIntOrDefault(scanner.nextLine().trim(), 0);
+        int capacity = parseIntWithValidation(scanner.nextLine().trim(), "Capacity");
+        if (capacity == Integer.MIN_VALUE) return;
 
-        // Dùng giá trị cũ nếu để trống
         try {
-            Stadium current = adminController.getStadium(id);
             Stadium updated = adminController.updateStadium(
                     id,
                     name.isEmpty() ? current.getName() : name,
@@ -196,19 +203,23 @@ public class AdminView {
     }
 
     private void deleteStadium() {
-        System.out.print("Enter Stadium ID to delete: ");
-        String id = scanner.nextLine().trim();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = scanner.nextLine().trim().toLowerCase();
-        if (!"y".equals(confirm)) {
-            System.out.println("[INFO] Delete cancelled.");
-            return;
-        }
-        try {
-            adminController.deleteStadium(id);
-            System.out.println("[SUCCESS] Stadium deleted: " + id);
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.print("Enter Stadium ID to delete (0 to cancel): ");
+            String id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            System.out.print("Are you sure? (y/n): ");
+            String confirm = scanner.nextLine().trim().toLowerCase();
+            if (!"y".equals(confirm)) {
+                System.out.println("[INFO] Delete cancelled.");
+                return;
+            }
+            try {
+                adminController.deleteStadium(id);
+                System.out.println("[SUCCESS] Stadium deleted: " + id);
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
     }
 
@@ -259,19 +270,23 @@ public class AdminView {
     }
 
     private void viewSection() {
-        System.out.print("Enter Section ID: ");
-        String id = scanner.nextLine().trim();
-        try {
-            Section s = adminController.getSection(id);
-            System.out.println("\n=== SECTION DETAIL ===");
-            System.out.println("  ID          : " + s.getSectionId());
-            System.out.println("  Type        : " + s.getSectionType().name());
-            System.out.println("  Total Rows  : " + s.getTotalRows());
-            System.out.println("  Seats/Row   : " + s.getSeatsPerRow());
-            System.out.printf("  Base Price  : %,d VND%n", s.getBasePrice());
-            System.out.printf("  Total Seats : %,d%n", s.getTotalCapacity());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.print("Enter Section ID (0 to cancel): ");
+            String id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                Section s = adminController.getSection(id);
+                System.out.println("\n=== SECTION DETAIL ===");
+                System.out.println("  ID          : " + s.getSectionId());
+                System.out.println("  Type        : " + s.getSectionType().name());
+                System.out.println("  Total Rows  : " + s.getTotalRows());
+                System.out.println("  Seats/Row   : " + s.getSeatsPerRow());
+                System.out.printf("  Base Price  : %,d VND%n", s.getBasePrice());
+                System.out.printf("  Total Seats : %,d%n", s.getTotalCapacity());
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
     }
 
@@ -287,11 +302,14 @@ public class AdminView {
             return;
         }
         System.out.print("Total Rows: ");
-        int rows = parseIntOrDefault(scanner.nextLine().trim(), 0);
+        int rows = parseIntWithValidation(scanner.nextLine().trim(), "Total Rows");
+        if (rows == Integer.MIN_VALUE) return;
         System.out.print("Seats per Row: ");
-        int seatsPerRow = parseIntOrDefault(scanner.nextLine().trim(), 0);
+        int seatsPerRow = parseIntWithValidation(scanner.nextLine().trim(), "Seats per Row");
+        if (seatsPerRow == Integer.MIN_VALUE) return;
         System.out.print("Base Price (VND): ");
-        long price = parseLongOrDefault(scanner.nextLine().trim(), 0L);
+        long price = parseLongWithValidation(scanner.nextLine().trim(), "Base Price");
+        if (price == Long.MIN_VALUE) return;
 
         try {
             Section s = adminController.createSection(id, type, rows, seatsPerRow, price);
@@ -304,18 +322,21 @@ public class AdminView {
 
     private void updateSection() {
         System.out.println("\n--- UPDATE SECTION ---");
-        System.out.print("Section ID to update: ");
-        String id = scanner.nextLine().trim();
-
         Section current;
-        try {
-            current = adminController.getSection(id);
-            System.out.printf("Current: %s | %d rows | %d seats/row | %,d VND%n",
-                    current.getSectionType().name(), current.getTotalRows(),
-                    current.getSeatsPerRow(), current.getBasePrice());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
-            return;
+        String id;
+        while (true) {
+            System.out.print("Section ID to update (0 to cancel): ");
+            id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                current = adminController.getSection(id);
+                System.out.printf("Current: %s | %d rows | %d seats/row | %,d VND%n",
+                        current.getSectionType().name(), current.getTotalRows(),
+                        current.getSeatsPerRow(), current.getBasePrice());
+                break;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
 
         System.out.println("Section Types: VIP, STANDARD, STANDING, ECONOMY_LOWER");
@@ -330,11 +351,14 @@ public class AdminView {
         }
 
         System.out.print("New Rows (0 to keep " + current.getTotalRows() + "): ");
-        int rows = parseIntOrDefault(scanner.nextLine().trim(), 0);
+        int rows = parseIntWithValidation(scanner.nextLine().trim(), "Rows");
+        if (rows == Integer.MIN_VALUE) return;
         System.out.print("New Seats/Row (0 to keep " + current.getSeatsPerRow() + "): ");
-        int seatsPerRow = parseIntOrDefault(scanner.nextLine().trim(), 0);
+        int seatsPerRow = parseIntWithValidation(scanner.nextLine().trim(), "Seats/Row");
+        if (seatsPerRow == Integer.MIN_VALUE) return;
         System.out.print("New Price (0 to keep " + current.getBasePrice() + "): ");
-        long price = parseLongOrDefault(scanner.nextLine().trim(), 0L);
+        long price = parseLongWithValidation(scanner.nextLine().trim(), "Price");
+        if (price == Long.MIN_VALUE) return;
 
         try {
             Section updated = adminController.updateSection(
@@ -350,19 +374,23 @@ public class AdminView {
     }
 
     private void deleteSection() {
-        System.out.print("Enter Section ID to delete: ");
-        String id = scanner.nextLine().trim();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = scanner.nextLine().trim().toLowerCase();
-        if (!"y".equals(confirm)) {
-            System.out.println("[INFO] Delete cancelled.");
-            return;
-        }
-        try {
-            adminController.deleteSection(id);
-            System.out.println("[SUCCESS] Section deleted: " + id);
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.print("Enter Section ID to delete (0 to cancel): ");
+            String id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            System.out.print("Are you sure? (y/n): ");
+            String confirm = scanner.nextLine().trim().toLowerCase();
+            if (!"y".equals(confirm)) {
+                System.out.println("[INFO] Delete cancelled.");
+                return;
+            }
+            try {
+                adminController.deleteSection(id);
+                System.out.println("[SUCCESS] Section deleted: " + id);
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
     }
 
@@ -398,12 +426,21 @@ public class AdminView {
     }
 
     private void listMatches() {
-        List<Match> matches = adminController.listMatches();
+        List<Match> matches = new java.util.ArrayList<>(adminController.listMatches());
         System.out.println("\n=== MATCH LIST (" + matches.size() + " total) ===");
         if (matches.isEmpty()) {
             System.out.println("  No matches found.");
             return;
         }
+
+        matches.sort((a, b) -> {
+            boolean aCompleted = a.getStatus() == MatchStatus.COMPLETED;
+            boolean bCompleted = b.getStatus() == MatchStatus.COMPLETED;
+            if (aCompleted && !bCompleted) return -1;
+            if (!aCompleted && bCompleted) return 1;
+            return a.getMatchDate().compareTo(b.getMatchDate());
+        });
+
         System.out.printf("%-12s %-10s %-35s %-12s %-8s %-12s%n",
                 "Match ID", "Stadium", "Title", "Date", "Time", "Status");
         System.out.println("-".repeat(95));
@@ -415,20 +452,24 @@ public class AdminView {
     }
 
     private void viewMatch() {
-        System.out.print("Enter Match ID: ");
-        String id = scanner.nextLine().trim();
-        try {
-            Match m = adminController.getMatch(id);
-            System.out.println("\n=== MATCH DETAIL ===");
-            System.out.println("  ID        : " + m.getMatchId());
-            System.out.println("  Stadium   : " + m.getStadiumId());
-            System.out.println("  Home Team : " + m.getHomeTeam());
-            System.out.println("  Away Team : " + m.getAwayTeam());
-            System.out.println("  Date      : " + m.getMatchDate());
-            System.out.println("  Time      : " + m.getMatchTime());
-            System.out.println("  Status    : " + m.getStatus().name());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.print("Enter Match ID (0 to cancel): ");
+            String id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                Match m = adminController.getMatch(id);
+                System.out.println("\n=== MATCH DETAIL ===");
+                System.out.println("  ID        : " + m.getMatchId());
+                System.out.println("  Stadium   : " + m.getStadiumId());
+                System.out.println("  Home Team : " + m.getHomeTeam());
+                System.out.println("  Away Team : " + m.getAwayTeam());
+                System.out.println("  Date      : " + m.getMatchDate());
+                System.out.println("  Time      : " + m.getMatchTime());
+                System.out.println("  Status    : " + m.getStatus().name());
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
     }
 
@@ -444,12 +485,24 @@ public class AdminView {
         String awayTeam = scanner.nextLine().trim();
         System.out.print("Match Date (yyyy-MM-dd): ");
         String date = scanner.nextLine().trim();
+        if (!isValidDateFormat(date)) {
+            System.out.println("[ERROR] Invalid date format. Please use yyyy-MM-dd.");
+            return;
+        }
         System.out.print("Match Time (HH:mm): ");
         String time = scanner.nextLine().trim();
+        if (!isValidTimeFormat(time)) {
+            System.out.println("[ERROR] Invalid time format. Please use HH:mm.");
+            return;
+        }
         System.out.println("Status: SCHEDULED / ONGOING / COMPLETED");
         System.out.print("Status (default SCHEDULED): ");
         String statusStr = scanner.nextLine().trim();
-        MatchStatus status = parseMatchStatus(statusStr);
+        MatchStatus status = statusStr.isEmpty() ? MatchStatus.SCHEDULED : parseMatchStatusOrNull(statusStr);
+        if (status == null && !statusStr.isEmpty()) {
+            System.out.println("[ERROR] Invalid status. Using SCHEDULED as default.");
+            status = MatchStatus.SCHEDULED;
+        }
 
         try {
             Match m = adminController.createMatch(id, stadiumId, homeTeam, awayTeam,
@@ -463,19 +516,22 @@ public class AdminView {
 
     private void updateMatch() {
         System.out.println("\n--- UPDATE MATCH ---");
-        System.out.print("Match ID to update: ");
-        String id = scanner.nextLine().trim();
-
         Match current;
-        try {
-            current = adminController.getMatch(id);
-            System.out.printf("Current: %s vs %s | %s %s | Stadium: %s | Status: %s%n",
-                    current.getHomeTeam(), current.getAwayTeam(),
-                    current.getMatchDate(), current.getMatchTime(),
-                    current.getStadiumId(), current.getStatus().name());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
-            return;
+        String id;
+        while (true) {
+            System.out.print("Match ID to update (0 to cancel): ");
+            id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                current = adminController.getMatch(id);
+                System.out.printf("Current: %s vs %s | %s %s | Stadium: %s | Status: %s%n",
+                        current.getHomeTeam(), current.getAwayTeam(),
+                        current.getMatchDate(), current.getMatchTime(),
+                        current.getStadiumId(), current.getStatus().name());
+                break;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
 
         System.out.print("New Stadium ID (Enter to keep): ");
@@ -486,11 +542,24 @@ public class AdminView {
         String awayTeam = scanner.nextLine().trim();
         System.out.print("New Date yyyy-MM-dd (Enter to keep): ");
         String date = scanner.nextLine().trim();
+        if (!date.isEmpty() && !isValidDateFormat(date)) {
+            System.out.println("[ERROR] Invalid date format. Please use yyyy-MM-dd.");
+            return;
+        }
         System.out.print("New Time HH:mm (Enter to keep): ");
         String time = scanner.nextLine().trim();
+        if (!time.isEmpty() && !isValidTimeFormat(time)) {
+            System.out.println("[ERROR] Invalid time format. Please use HH:mm.");
+            return;
+        }
         System.out.println("Status: SCHEDULED / ONGOING / COMPLETED");
         System.out.print("New Status (Enter to keep " + current.getStatus().name() + "): ");
         String statusStr = scanner.nextLine().trim();
+        MatchStatus newStatus = statusStr.isEmpty() ? current.getStatus() : parseMatchStatusOrNull(statusStr);
+        if (newStatus == null && !statusStr.isEmpty()) {
+            System.out.println("[ERROR] Invalid status. Keeping current status: " + current.getStatus().name());
+            newStatus = current.getStatus();
+        }
 
         try {
             Match updated = adminController.updateMatch(
@@ -500,7 +569,7 @@ public class AdminView {
                     awayTeam.isEmpty()  ? current.getAwayTeam()  : awayTeam,
                     date.isEmpty()      ? current.getMatchDate()  : date,
                     time.isEmpty()      ? current.getMatchTime()  : time,
-                    statusStr.isEmpty() ? current.getStatus() : parseMatchStatus(statusStr)
+                    newStatus
             );
             System.out.println("[SUCCESS] Match updated: " + updated.getMatchId());
         } catch (EntityNotFoundException e) {
@@ -509,34 +578,60 @@ public class AdminView {
     }
 
     private void updateMatchStatus() {
-        System.out.print("Enter Match ID: ");
-        String id = scanner.nextLine().trim();
-        System.out.println("Status options: SCHEDULED / ONGOING / COMPLETED");
-        System.out.print("New Status: ");
-        String statusStr = scanner.nextLine().trim();
+        String id;
+        while (true) {
+            System.out.print("Enter Match ID (0 to cancel): ");
+            id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            try {
+                adminController.getMatch(id);
+                break;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
+        }
 
-        try {
-            Match m = adminController.updateMatchStatus(id, parseMatchStatus(statusStr));
-            System.out.println("[SUCCESS] Match " + id + " status → " + m.getStatus().name());
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.println("Status options: SCHEDULED / ONGOING / COMPLETED");
+            System.out.print("New Status (0 to cancel): ");
+            String statusStr = scanner.nextLine().trim();
+            if ("0".equals(statusStr)) return;
+
+            MatchStatus status = parseMatchStatusOrNull(statusStr);
+            if (status == null) {
+                System.out.println("[ERROR] Invalid status. Please enter SCHEDULED, ONGOING, or COMPLETED.");
+                continue;
+            }
+
+            try {
+                Match m = adminController.updateMatchStatus(id, status);
+                System.out.println("[SUCCESS] Match " + id + " status → " + m.getStatus().name());
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage());
+                return;
+            }
         }
     }
 
     private void deleteMatch() {
-        System.out.print("Enter Match ID to delete: ");
-        String id = scanner.nextLine().trim();
-        System.out.print("Are you sure? (y/n): ");
-        String confirm = scanner.nextLine().trim().toLowerCase();
-        if (!"y".equals(confirm)) {
-            System.out.println("[INFO] Delete cancelled.");
-            return;
-        }
-        try {
-            adminController.deleteMatch(id);
-            System.out.println("[SUCCESS] Match deleted: " + id);
-        } catch (EntityNotFoundException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        while (true) {
+            System.out.print("Enter Match ID to delete (0 to cancel): ");
+            String id = scanner.nextLine().trim();
+            if ("0".equals(id)) return;
+            System.out.print("Are you sure? (y/n): ");
+            String confirm = scanner.nextLine().trim().toLowerCase();
+            if (!"y".equals(confirm)) {
+                System.out.println("[INFO] Delete cancelled.");
+                return;
+            }
+            try {
+                adminController.deleteMatch(id);
+                System.out.println("[SUCCESS] Match deleted: " + id);
+                return;
+            } catch (EntityNotFoundException e) {
+                System.out.println("[ERROR] " + e.getMessage() + ". Vui lòng nhập lại.");
+            }
         }
     }
 
@@ -544,14 +639,42 @@ public class AdminView {
     // HELPER METHODS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    private int parseIntOrDefault(String s, int def) {
-        try { return Integer.parseInt(s); }
-        catch (NumberFormatException e) { return def; }
+    private int parseIntWithValidation(String s, String fieldName) {
+        int result;
+        try {
+            result = Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            System.out.println("[ERROR] " + fieldName + " must be a valid integer.");
+            return Integer.MIN_VALUE;
+        }
+        if (result < 0) {
+            System.out.println("[ERROR] " + fieldName + " cannot be negative.");
+            return Integer.MIN_VALUE;
+        }
+        return result;
     }
 
-    private long parseLongOrDefault(String s, long def) {
-        try { return Long.parseLong(s); }
-        catch (NumberFormatException e) { return def; }
+    private long parseLongWithValidation(String s, String fieldName) {
+        long result;
+        try {
+            result = Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            System.out.println("[ERROR] " + fieldName + " must be a valid number.");
+            return Long.MIN_VALUE;
+        }
+        if (result < 0) {
+            System.out.println("[ERROR] " + fieldName + " cannot be negative.");
+            return Long.MIN_VALUE;
+        }
+        return result;
+    }
+
+    private boolean isValidDateFormat(String date) {
+        return date.matches("\\d{4}-\\d{2}-\\d{2}");
+    }
+
+    private boolean isValidTimeFormat(String time) {
+        return time.matches("\\d{2}:\\d{2}");
     }
 
     private SectionType parseSectionType(String s) {
@@ -559,8 +682,9 @@ public class AdminView {
         catch (Exception e) { return null; }
     }
 
-    private MatchStatus parseMatchStatus(String s) {
-        try { return MatchStatus.valueOf(s.toUpperCase()); }
-        catch (Exception e) { return MatchStatus.SCHEDULED; }
+    private MatchStatus parseMatchStatusOrNull(String s) {
+        if (s == null || s.trim().isEmpty()) return null;
+        try { return MatchStatus.valueOf(s.trim().toUpperCase()); }
+        catch (Exception e) { return null; }
     }
 }
