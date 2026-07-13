@@ -1,5 +1,3 @@
-package test;
-
 import model.entity.*;
 import model.enums.*;
 import repository.*;

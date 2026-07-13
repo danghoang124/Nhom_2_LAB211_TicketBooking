@@ -1,5 +1,3 @@
-package test;
-
 import controller.BookingController;
 import model.entity.Seat;
 import model.entity.Ticket;
@@ -98,7 +96,7 @@ public class BookingTest {
         Ticket createdTicket = ticketRepo.findAll().get(0);
 
         // Act
-        boolean cancelResult = controller.cancelBooking(createdTicket.getTicketId());
+        boolean cancelResult = controller.cancelBooking("FAN01", createdTicket.getTicketId());
 
         // Assert
         assertTrue(cancelResult, "Hủy vé hợp lệ phải trả về true");

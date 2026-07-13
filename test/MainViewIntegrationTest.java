@@ -1,5 +1,3 @@
-package test;
-
 import controller.BookingController;
 import controller.FanController;
 import controller.ReportController;
@@ -252,7 +250,8 @@ public class MainViewIntegrationTest {
     @DisplayName("7. Hủy vé → ghế trở lại AVAILABLE")
     void testCancelBooking() {
         assertNotNull(bookedTicketId);
-        boolean result = bookingController.cancelBooking(bookedTicketId);
+        String fanId = fanController.getCurrentFan().getFanId();
+        boolean result = bookingController.cancelBooking(fanId, bookedTicketId);
         assertTrue(result, "Hủy vé phải thành công");
 
         Optional<Ticket> ticketOpt = ticketRepo.findById(bookedTicketId);
