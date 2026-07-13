@@ -104,48 +104,67 @@ public class MainView {
             System.out.println("\n======================================");
             System.out.printf("  Welcome: %-25s  %n", currentFan.getFullName());
             System.out.println("--------------------------------------");
-            System.out.println("  1. View match list                  ");
-            System.out.println("  2. View seat map by match           ");
-            System.out.println("  3. Book a ticket                    ");
-            System.out.println("  4. View my tickets                  ");
-            System.out.println("  5. Reports & Statistics             ");
+
             if (isAdmin) {
-                System.out.println("  6. Admin Panel (CRUD)               ");
+                System.out.println("  1. View match list                  ");
+                System.out.println("  2. View Performance Report          ");
+                System.out.println("  3. Admin Panel (CRUD)               ");
+                System.out.println("  4. Logout                           ");
+            } else {
+                System.out.println("  1. View match list                  ");
+                System.out.println("  2. View seat map by match           ");
+                System.out.println("  3. Book a ticket                    ");
+                System.out.println("  4. View my tickets                  ");
+                System.out.println("  5. Reports & Statistics             ");
+                System.out.println("  6. Logout                           ");
             }
-            System.out.println("  7. Logout                           ");
             System.out.println("======================================");
             System.out.print("Select an option: ");
 
             String choice = scanner.nextLine().trim();
-            switch (choice) {
-                case "1":
-                    showMatchList();
-                    break;
-                case "2":
-                    showSeatMap();
-                    break;
-                case "3":
-                    handleBooking();
-                    break;
-                case "4":
-                    showMyTickets();
-                    break;
-                case "5":
-                    reportView.displayMenu(currentFan.getFanId());
-                    break;
-                case "6":
-                    if (isAdmin) {
+
+            if (isAdmin) {
+                switch (choice) {
+                    case "1":
+                        showMatchList();
+                        break;
+                    case "2":
+                        reportView.displayAdminMenu();
+                        break;
+                    case "3":
                         adminView.start();
-                    } else {
+                        break;
+                    case "4":
+                        fanController.logout();
+                        System.out.println("[SUCCESS] Logged out successfully!");
+                        return true;
+                    default:
                         System.out.println("Invalid option. Please try again.");
-                    }
-                    break;
-                case "7":
-                    fanController.logout();
-                    System.out.println("[SUCCESS] Logged out successfully!");
-                    return true;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+                }
+            } else {
+                switch (choice) {
+                    case "1":
+                        showMatchList();
+                        break;
+                    case "2":
+                        showSeatMap();
+                        break;
+                    case "3":
+                        handleBooking();
+                        break;
+                    case "4":
+                        showMyTickets();
+                        break;
+                    case "5":
+                        reportView.displayMenu(currentFan.getFanId());
+                        break;
+                    case "6":
+                        fanController.logout();
+                        System.out.println("[SUCCESS] Logged out successfully!");
+                        return true;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
             }
         }
     }

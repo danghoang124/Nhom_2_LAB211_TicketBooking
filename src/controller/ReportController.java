@@ -2,8 +2,11 @@ package controller;
 
 import model.entity.BookingTransaction;
 import model.entity.Match;
+import model.entity.Seat;
+import model.entity.Section;
 import model.entity.Ticket;
 import model.enums.SeatStatus;
+import model.enums.SectionType;
 import model.enums.TransactionStatus;
 import repository.MatchRepository;
 import repository.SeatRepository;
@@ -11,7 +14,10 @@ import repository.SectionRepository;
 import repository.TicketRepository;
 import repository.TransactionRepository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller xử lý logic báo cáo và thống kê hệ thống.
@@ -65,6 +71,16 @@ public class ReportController {
 
     // ── Thống kê hệ thống ────────────────────────────────────────────────────
 
+    /** Lấy tất cả vé trong hệ thống (dùng cho Admin). */
+    public List<Ticket> getAllTickets() {
+        return ticketRepository.findAll();
+    }
+
+    /** Lấy tất cả giao dịch trong hệ thống (dùng cho Admin). */
+    public List<BookingTransaction> getAllTransactions() {
+        return transactionRepository.findAll();
+    }
+
     /** Tổng số giao dịch trong hệ thống. */
     public int getTotalTransactionCount() {
         return transactionRepository.findAll().size();
@@ -107,5 +123,75 @@ public class ReportController {
     /** Số vé đã bán thành công cho một trận. */
     public int getSoldTicketCount(String matchId) {
         return ticketRepository.countSoldTickets(matchId);
+    }
+
+    // ── Doanh thu theo Section Type ──────────────────────────────────────────
+
+    /**
+     * Tính doanh thu theo loại khu vực (Section Type) cho TOÀN HỆ THỐNG.
+     *
+     * <p>Dùng cho Admin System Summary — hiển thị bảng doanh thu theo VIP, STANDARD, STANDING, ECONOMY.
+     *
+     * @return Map với key = SectionType, value = long[]{soVeDaBan, tongDoanhThu}.
+     */
+    public Map<SectionType, long[]> getRevenueBySectionType() {
+        return calculateRevenueBySectionType(null);
+    }
+
+    /**
+     * Tính doanh thu theo loại khu vực (Section Type) cho MỘT TRẬN ĐẤU.
+     *
+     * <p>Dùng cho Admin Seat Statistics — hiển thị doanh thu từng loại ghế trong trận.
+     *
+     * @param matchId ID trận đấu.
+     * @return Map với key = SectionType, value = long[]{soVeDaBan, tongDoanhThu}.
+     */
+    public Map<SectionType, long[]> getRevenueBySectionType(String matchId) {
+        return calculateRevenueBySectionType(matchId);
+    }
+
+    /**
+     * Method nội bộ — tính doanh thu theo Section Type.
+     *
+     * @param matchId null = toàn hệ thống, không null = theo trận.
+     */
+    private Map<SectionType, long[]> calculateRevenueBySectionType(String matchId) {
+        // 1. Lấy danh sách vé VALID
+        List<Ticket> tickets;
+        if (matchId == null) {
+            tickets = ticketRepository.findByStatus(model.enums.TicketStatus.VALID);
+        } else {
+            tickets = ticketRepository.findByMatch(matchId);
+            tickets = tickets.stream().filter(Ticket::isValid).toList();
+        }
+
+        // 2. Load Seat map (seatId → SectionId) cho hiệu năng
+        Map<String, String> seatToSection = new HashMap<>();
+        List<Seat> seats = matchId == null ? seatRepository.findAll() : seatRepository.findByMatch(matchId);
+        for (Seat seat : seats) {
+            seatToSection.put(seat.getSeatId(), seat.getSectionId());
+        }
+
+        // 3. Load Section map (sectionId → SectionType)
+        Map<String, SectionType> sectionToType = new HashMap<>();
+        for (Section section : sectionRepository.findAll()) {
+            sectionToType.put(section.getSectionId(), section.getSectionType());
+        }
+
+        // 4. Group by SectionType, sum price
+        Map<SectionType, long[]> result = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            String sectionId = seatToSection.get(ticket.getSeatId());
+            if (sectionId == null) continue;
+
+            SectionType type = sectionToType.get(sectionId);
+            if (type == null) continue;
+
+            long[] stats = result.computeIfAbsent(type, k -> new long[]{0, 0});
+            stats[0]++;        // số vé
+            stats[1] += ticket.getPrice(); // doanh thu
+        }
+
+        return result;
     }
 }

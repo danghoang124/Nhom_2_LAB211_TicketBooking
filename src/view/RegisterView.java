@@ -3,9 +3,6 @@ package view;
 import controller.FanController;
 import controller.FanController.RegisterResult;
 import exception.UserAlreadyExistsException;
-import model.entity.Ticket;
-
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -278,146 +275,8 @@ public class RegisterView {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // MENU CHÍNH SAU ĐĂNG NHẬP
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Hiển thị menu chính dành cho Fan đã đăng nhập.
-     *
-     * <p>Menu bao gồm:
-     * <ul>
-     *   <li>Xem tất cả vé của tôi.</li>
-     *   <li>Xem vé còn hiệu lực.</li>
-     *   <li>Đăng xuất.</li>
-     * </ul>
-     *
-     * <p>Method này chạy trong vòng lặp đến khi người dùng chọn đăng xuất.
-     */
-    public void showFanMenu() {
-        if (!fanController.isLoggedIn()) {
-            System.out.println("  [Error] You are not logged in.");
-            return;
-        }
-
-        String fanName = fanController.getCurrentFan().getFullName();
-
-        while (true) {
-            System.out.println();
-            printDivider();
-            System.out.printf("  Welcome, %s!%n", fanName);
-            System.out.println("  MAIN MENU");
-            printDivider();
-            System.out.println("  1. View all my tickets");
-            System.out.println("  2. View valid tickets");
-            System.out.println("  0. Logout");
-            printDivider();
-            System.out.print("  Select an option: ");
-
-            String choice = scanner.nextLine().trim();
-
-            switch (choice) {
-                case "1":
-                    showAllMyTickets();
-                    break;
-                case "2":
-                    showValidTickets();
-                    break;
-                case "0":
-                    handleLogout();
-                    return; // thoát khỏi vòng lặp menu
-                default:
-                    System.out.println("  ✗ Invalid option. Please try again.");
-            }
-        }
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // HIỂN THỊ DANH SÁCH VÉ
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Hiển thị tất cả vé (cả VALID lẫn CANCELLED) của Fan hiện tại.
-     *
-     * <p>Gọi {@code fanController.getMyTickets()} để lấy data,
-     * rồi format và in ra màn hình.
-     */
-    private void showAllMyTickets() {
-        List<Ticket> tickets = fanController.getMyTickets();
-        System.out.println();
-        printDivider();
-        System.out.println("  ALL MY TICKETS");
-        printDivider();
-
-        if (tickets.isEmpty()) {
-            System.out.println("  You don't have any tickets yet.");
-        } else {
-            System.out.printf("  Total: %d tickets%n%n", tickets.size());
-            printTicketTableHeader();
-            for (Ticket t : tickets) {
-                printTicketRow(t);
-            }
-        }
-        printDivider();
-    }
-
-    /**
-     * Hiển thị chỉ các vé VALID (chưa hủy) của Fan hiện tại.
-     */
-    private void showValidTickets() {
-        List<Ticket> tickets = fanController.getMyValidTickets();
-        System.out.println();
-        printDivider();
-        System.out.println("  VALID TICKETS");
-        printDivider();
-
-        if (tickets.isEmpty()) {
-            System.out.println("  You don't have any valid tickets.");
-        } else {
-            System.out.printf("  Total: %d valid tickets%n%n", tickets.size());
-            printTicketTableHeader();
-            for (Ticket t : tickets) {
-                printTicketRow(t);
-            }
-        }
-        printDivider();
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // XỬ LÝ ĐĂNG XUẤT
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Xử lý đăng xuất: gọi Controller rồi hiển thị thông báo.
-     */
-    private void handleLogout() {
-        String fanName = fanController.getCurrentFan().getFullName();
-        fanController.logout();
-        System.out.println();
-        printDivider();
-        System.out.printf("  ✓ Logged out successfully. Goodbye, %s!%n", fanName);
-        printDivider();
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
     // HELPER METHODS
     // ═════════════════════════════════════════════════════════════════════════
-
-    /** In header bảng vé. */
-    private void printTicketTableHeader() {
-        System.out.printf("  %-14s %-12s %-10s %-20s %-10s%n",
-                "TICKET ID", "MATCH ID", "SEAT ID", "BOOKED AT", "STATUS");
-        System.out.println("  " + "-".repeat(72));
-    }
-
-    /** In một dòng thông tin vé. */
-    private void printTicketRow(Ticket t) {
-        System.out.printf("  %-14s %-12s %-10s %-20s %-10s%n",
-                t.getTicketId(),
-                t.getMatchId(),
-                t.getSeatId(),
-                t.getBookedAt(),
-                t.getStatus().name());
-    }
 
     private void printDivider() {
         System.out.println("─".repeat(50));
