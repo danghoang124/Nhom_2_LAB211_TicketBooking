@@ -12,7 +12,8 @@ package model.enums;
 public enum TransactionStatus {
     SUCCESS,
     FAILED,
-    PARTIAL;
+    PARTIAL,
+    REFUNDED;
 
     /** Parse từ chuỗi (không phân biệt hoa/thường). */
     public static TransactionStatus fromString(String value) {

@@ -1,22 +1,27 @@
 package view;
 
+import controller.BookingController;
 import controller.ReportController;
 import model.entity.BookingTransaction;
 import model.entity.Match;
 import model.entity.Ticket;
 import model.enums.SectionType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class ReportView {
 
     private ReportController reportController;
+    private BookingController bookingController;
     private Scanner scanner;
 
-    public ReportView(ReportController reportController, Scanner scanner) {
+    public ReportView(ReportController reportController, BookingController bookingController, Scanner scanner) {
         this.reportController = reportController;
+        this.bookingController = bookingController;
         this.scanner = scanner;
     }
 
@@ -99,7 +104,10 @@ public class ReportView {
     public void displayMyTickets(String fanId) {
         List<Ticket> tickets = reportController.getAllTicketsByFan(fanId);
 
-        System.out.println("\n--- MY TICKET HISTORY (ALL) ---");
+        System.out.println("\n======================================");
+        System.out.println("       MY TICKET HISTORY (ALL)        ");
+        System.out.println("======================================");
+
         if (tickets.isEmpty()) {
             System.out.println("You do not have any tickets.");
             return;
@@ -121,6 +129,114 @@ public class ReportView {
 
         System.out.println("-".repeat(90));
         System.out.printf("Total: %d tickets%n", tickets.size());
+
+        // ── Hỏi huỷ vé ──
+        System.out.print("\nDo you want to cancel any ticket? (y/n): ");
+        if (!"y".equals(scanner.nextLine().trim().toLowerCase())) return;
+
+        // Lọc vé có thể huỷ (VALID)
+        List<Ticket> cancellable = tickets.stream().filter(Ticket::isValid).toList();
+        if (cancellable.isEmpty()) {
+            System.out.println("[INFO] No cancellable tickets found.");
+            return;
+        }
+
+        // Hiển thị danh sách vé có thể huỷ
+        System.out.println("\n--- CANCELLABLE TICKETS ---");
+        System.out.printf("%-16s %-12s %-14s %12s %-20s%n",
+                "Ticket ID", "Match", "Seat", "Price (VND)", "Booking Date");
+        System.out.println("-".repeat(80));
+        for (Ticket t : cancellable) {
+            System.out.printf("%-16s %-12s %-14s %,12d %-20s%n",
+                    t.getTicketId(), t.getMatchId(), t.getSeatId(),
+                    t.getPrice(), t.getBookedAt());
+        }
+        System.out.println("-".repeat(80));
+
+        // ── Nhập票ID từng dòng ──
+        System.out.println("\n--- CANCEL TICKETS ---");
+        System.out.println("Commands: 0 = Finish entering | 1 = Edit previous entry");
+
+        List<String> ticketIdsToCancel = new ArrayList<>();
+        int cancelNumber = 1;
+
+        while (true) {
+            System.out.printf("Cancel ticket %d - Enter Ticket ID: ", cancelNumber);
+            String input = scanner.nextLine().trim();
+
+            // ── Nhập 0: Kết thúc nhập ──
+            if ("0".equals(input)) {
+                break;
+            }
+
+            // ── Nhập 1: Sửa票trước (xóa票cuối cùng, quay lại nhập lại) ──
+            if ("1".equals(input)) {
+                if (!ticketIdsToCancel.isEmpty()) {
+                    String removed = ticketIdsToCancel.remove(ticketIdsToCancel.size() - 1);
+                    cancelNumber--;
+                    System.out.println("[INFO] Removed ticket " + removed + ". Please re-enter.");
+                } else {
+                    System.out.println("[INFO] No ticket to edit.");
+                }
+                continue;
+            }
+
+            // ── Validate票ID ──
+            String ticketId = input;
+
+            // Kiểm tra tồn tại trong danh sách cancellable
+            Optional<Ticket> found = cancellable.stream()
+                    .filter(t -> t.getTicketId().equals(ticketId))
+                    .findFirst();
+            if (!found.isPresent()) {
+                System.out.println("[FAILED] Invalid ticket ID or ticket does not exist.");
+                continue;
+            }
+
+            // Kiểm tra trùng
+            if (ticketIdsToCancel.contains(ticketId)) {
+                System.out.println("[FAILED] Ticket " + ticketId + " already added to cancel list.");
+                continue;
+            }
+
+            ticketIdsToCancel.add(ticketId);
+            cancelNumber++;
+        }
+
+        // ── Hiển thị summary và xác nhận ──
+        if (ticketIdsToCancel.isEmpty()) {
+            System.out.println("[INFO] No tickets to cancel.");
+            return;
+        }
+
+        System.out.printf("%n--- SUMMARY ---%n");
+        System.out.printf("Enter %d ticket(s) to cancel: %s%n",
+                ticketIdsToCancel.size(), String.join(", ", ticketIdsToCancel));
+        System.out.print("Proceed with cancellation? (1 = Yes, 0 = No): ");
+        String confirm = scanner.nextLine().trim();
+
+        if (!"1".equals(confirm)) {
+            System.out.println("[INFO] Cancellation aborted.");
+            return;
+        }
+
+        // ── Huỷ từng vé ──
+        int cancelCount = 0;
+        for (String tid : ticketIdsToCancel) {
+            try {
+                if (bookingController.cancelBooking(fanId, tid)) {
+                    System.out.println("[SUCCESS] Ticket " + tid
+                            + " cancelled. Seat restored. Refund recorded.");
+                    cancelCount++;
+                } else {
+                    System.out.println("[FAILED] Ticket " + tid
+                            + " not found or already cancelled.");
+                }
+            } catch (Exception e) {
+                System.out.println("[FAILED] " + tid + ": " + e.getMessage());
+            }
+        }
+        System.out.printf("Cancelled %d ticket(s).%n", cancelCount);
     }
 
     public void displayMyTransactions(String fanId) {
@@ -257,39 +373,36 @@ public class ReportView {
         System.out.printf("  %-15s | %,12d | %,15d%n", "TOTAL", totalTickets, grandTotalRevenue);
     }
 
+    /**
+     * Hiển thị thống kê ghế theo trận — đơn giản cho Fan.
+     */
     public void displayMatchSeatSummary() {
         System.out.println("\n--- SEAT STATISTICS BY MATCH ---");
 
-        List<Match> matches = reportController.getAllMatches();
+        List<Match> matches = reportController.getAllMatches().stream()
+                .filter(m -> m.getStatus() == model.enums.MatchStatus.SCHEDULED)
+                .sorted((a, b) -> a.getMatchDate().compareTo(b.getMatchDate()))
+                .toList();
         if (matches.isEmpty()) {
-            System.out.println("No matches in the system.");
+            System.out.println("No scheduled matches in the system.");
             return;
         }
 
-        System.out.printf("%-12s %-35s %-12s %8s %8s %8s %15s%n",
-                "Match ID", "Title", "Status", "Total", "Booked", "Sold", "Revenue (VND)");
-        System.out.println("-".repeat(105));
+        System.out.printf("%-12s %-35s %-12s %-8s %-12s%n",
+                "Match ID", "Title", "Date", "Time", "Available");
+        System.out.println("-".repeat(85));
 
         for (Match match : matches) {
-            int[] summary = reportController.getMatchSeatSummary(match.getMatchId());
-            int soldTickets = reportController.getSoldTicketCount(match.getMatchId());
+            int available = reportController.getMatchSeatSummary(match.getMatchId())[2];
 
-            // Tính doanh thu theo Section Type cho trận này
-            Map<SectionType, long[]> revenueByType = reportController.getRevenueBySectionType(match.getMatchId());
-            long matchRevenue = revenueByType.values().stream()
-                    .mapToLong(stats -> stats[1])
-                    .sum();
-
-            System.out.printf("%-12s %-35s %-12s %,8d %,8d %,8d %,15d%n",
+            System.out.printf("%-12s %-35s %-12s %-8s %,12d%n",
                     match.getMatchId(),
                     match.getTitle(),
-                    match.getStatus().name(),
-                    summary[0],    // Total
-                    summary[1],    // Booked
-                    soldTickets,   // Sold
-                    matchRevenue); // Revenue
+                    match.getMatchDate(),
+                    match.getMatchTime(),
+                    available);
         }
 
-        System.out.println("-".repeat(105));
+        System.out.println("-".repeat(85));
     }
 }

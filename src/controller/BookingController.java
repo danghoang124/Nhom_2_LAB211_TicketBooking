@@ -452,11 +452,62 @@ public class BookingController {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // KIỂM TRA GIỚI HẠN VÉ
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Đếm số vé VALID (chưa huỷ) của fan trong một trận đấu.
+     *
+     * @param fanId   ID fan.
+     * @param matchId ID trận đấu.
+     * @return Số vé còn hiệu lực.
+     */
+    public int getValidTicketCountForMatch(String fanId, String matchId) {
+        return (int) ticketRepository.findValidTickets(fanId).stream()
+                .filter(t -> matchId.equals(t.getMatchId()))
+                .count();
+    }
+
+    /**
+     * Kiểm tra fan có thể đặt thêm vé cho trận này không (giới hạn {@value #MAX_TICKETS_PER_TRANSACTION} vé/trận).
+     *
+     * @param fanId   ID fan.
+     * @param matchId ID trận đấu.
+     * @return {@code true} nếu fan chưa đạt giới hạn.
+     */
+    public boolean canBookMoreTickets(String fanId, String matchId) {
+        return getValidTicketCountForMatch(fanId, matchId) < MAX_TICKETS_PER_TRANSACTION;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GHI GIAO DỊCH THẤT BẠI
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Ghi lại một giao dịch thất bại (FAILED) — ví dụ: từ chối thanh toán.
+     *
+     * @param fanId           ID fan.
+     * @param matchId         ID trận đấu.
+     * @param numberOfTickets Số vé.
+     * @param totalAmount     Tổng tiền.
+     * @param mechanism       Cơ chế đồng bộ.
+     */
+    public void recordFailedTransaction(String fanId, String matchId,
+                                         int numberOfTickets, long totalAmount,
+                                         LockMechanism mechanism) {
+        long startTime = System.currentTimeMillis();
+        String transactionId = generateTransactionId();
+        createTransaction(transactionId, fanId, matchId, numberOfTickets, totalAmount,
+                TransactionStatus.FAILED, mechanism, startTime);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // HUỶ VÉ
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
-     * Hủy vé đã đặt (VALID → CANCELLED) và phục hồi ghế (BOOKED → AVAILABLE).
+     * Hủy vé đã đặt (VALID → CANCELLED), phục hồi ghế (BOOKED → AVAILABLE)
+     * và ghi giao dịch hoàn tiền (REFUNDED).
      *
      * @param fanId    ID của user đang yêu cầu hủy (dùng để kiểm tra quyền sở hữu).
      * @param ticketId ID vé cần hủy.
@@ -480,6 +531,8 @@ public class BookingController {
             throw new IllegalStateException("Cannot cancel a ticket for a match that is already " + matchOpt.get().getStatus().name() + ".");
         }
 
+        long startTime = System.currentTimeMillis();
+
         // Hủy vé
         ticket.setStatus(TicketStatus.CANCELLED);
         ticketRepository.save(ticket);
@@ -493,6 +546,12 @@ public class BookingController {
             seat.updateStatus(SeatStatus.AVAILABLE);
             seatRepository.save(seat);
         }
+
+        // Ghi giao dịch hoàn tiền
+        String transactionId = generateTransactionId();
+        createTransaction(transactionId, fanId, ticket.getMatchId(), 1, ticket.getPrice(),
+                TransactionStatus.REFUNDED, LockMechanism.SYNCHRONIZED, startTime);
+
         return true;
     }
 

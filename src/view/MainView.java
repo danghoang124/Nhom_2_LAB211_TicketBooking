@@ -46,7 +46,7 @@ public class MainView {
         this.loginView = new LoginView(fanController, scanner);
         this.registerView = new RegisterView(fanController, scanner);
         this.bookingView = new BookingView(bookingController, fanController, scanner);
-        this.reportView = new ReportView(reportController, scanner);
+        this.reportView = new ReportView(reportController, bookingController, scanner);
         this.adminView = new AdminView(appContext.getAdminController(), scanner);
     }
 
@@ -114,9 +114,8 @@ public class MainView {
                 System.out.println("  1. View match list                  ");
                 System.out.println("  2. View seat map by match           ");
                 System.out.println("  3. Book a ticket                    ");
-                System.out.println("  4. View my tickets                  ");
-                System.out.println("  5. Reports & Statistics             ");
-                System.out.println("  6. Logout                           ");
+                System.out.println("  4. Reports & Statistics             ");
+                System.out.println("  5. Logout                           ");
             }
             System.out.println("======================================");
             System.out.print("Select an option: ");
@@ -153,12 +152,9 @@ public class MainView {
                         handleBooking();
                         break;
                     case "4":
-                        showMyTickets();
-                        break;
-                    case "5":
                         reportView.displayMenu(currentFan.getFanId());
                         break;
-                    case "6":
+                    case "5":
                         fanController.logout();
                         System.out.println("[SUCCESS] Logged out successfully!");
                         return true;
@@ -174,11 +170,20 @@ public class MainView {
         System.out.println("                             MATCH LIST                                       ");
         System.out.println("==============================================================================");
 
-        List<Match> matches = stadiumController.getAllMatches();
+        List<Match> matches = new java.util.ArrayList<>(stadiumController.getAllMatches());
         if (matches.isEmpty()) {
             System.out.println("No matches found in the system.");
             return;
         }
+
+        // Sắp xếp: COMPLETED trước (theo ngày tăng dần), rồi SCHEDULED (theo ngày tăng dần)
+        matches.sort((a, b) -> {
+            boolean aCompleted = a.getStatus() == MatchStatus.COMPLETED;
+            boolean bCompleted = b.getStatus() == MatchStatus.COMPLETED;
+            if (aCompleted && !bCompleted) return -1;
+            if (!aCompleted && bCompleted) return 1;
+            return a.getMatchDate().compareTo(b.getMatchDate());
+        });
 
         System.out.printf("%-12s %-12s %-35s %-12s %-8s %-12s%n",
                 "Match ID", "Stadium", "Title", "Date", "Time", "Status");
@@ -273,6 +278,12 @@ public class MainView {
             return;
         }
 
+        // ── Kiểm tra giới hạn 4 vé/trận TRƯỚC khi chọn section ──
+        if (!bookingController.canBookMoreTickets(currentFan.getFanId(), matchId)) {
+            System.out.println("[FAILED] You can only book up to 4 tickets per match. Please cancel a ticket first.");
+            return;
+        }
+
         // ── Bước 1: Hiển thị và cho chọn Section ─────────────────────────────
         List<Section> sections = stadiumController.getSections();
         System.out.println("\nSeat Sections:");
@@ -322,16 +333,29 @@ public class MainView {
         }
         System.out.println();
 
-        // ── Bước 3: Chọn Seat ID trong Section đó ────────────────────────────
-        System.out.print("\nEnter Seat ID from the list above: ");
-        String seatId = scanner.nextLine().trim();
+        // ── Bước 3: Nhập Seat ID với loop ────────────────────────────────────
+        String seatId = null;
+        while (true) {
+            System.out.print("\nEnter Seat ID from the list above: ");
+            String inputSeatId = scanner.nextLine().trim();
 
-        // Validate: ghế phải thuộc đúng Section vừa chọn
-        boolean validSeat = availableSeats.stream()
-                .anyMatch(s -> s.getSeatId().equals(seatId));
-        if (!validSeat) {
-            System.out.println("[FAILED] Seat ID không hợp lệ hoặc không thuộc section " + sectionId);
-            return;
+            // Kiểm tra định dạng: SEAT + 6 chữ số
+            if (!inputSeatId.matches("(?i)SEAT\\d{6}")) {
+                System.out.println("[FAILED] Invalid Seat ID format. Please try again.");
+                continue;
+            }
+
+            // Kiểm tra seat có trong danh sách available không
+            String finalInputSeatId = inputSeatId;
+            boolean isAvailable = availableSeats.stream()
+                    .anyMatch(s -> s.getSeatId().equalsIgnoreCase(finalInputSeatId));
+            if (!isAvailable) {
+                System.out.println("[FAILED] Seat " + inputSeatId + " has already been booked. Please choose another seat.");
+                continue;
+            }
+
+            seatId = inputSeatId;
+            break; // Seat hợp lệ
         }
 
         // ── Bước 1: LOCK ghế trước khi xác nhận ─────────────────────────────
@@ -380,6 +404,10 @@ public class MainView {
         String paymentChoice = scanner.nextLine().trim().toLowerCase();
 
         if (!"y".equals(paymentChoice)) {
+            // Ghi giao dịch thất bại (từ chối thanh toán)
+            bookingController.recordFailedTransaction(
+                    currentFan.getFanId(), matchId, 1, price,
+                    model.enums.LockMechanism.SYNCHRONIZED);
             bookingController.cancelLockedSeat(seatId);
             System.out.println("[INFO] Payment cancelled. Seat " + seatId + " released.");
             return;
@@ -392,12 +420,15 @@ public class MainView {
             success = bookingController.confirmBooking(
                     currentFan.getFanId(), matchId, seatId, model.enums.LockMechanism.SYNCHRONIZED);
         } catch (exception.SeatAlreadyBookedException e) {
+            bookingController.cancelLockedSeat(seatId);
             System.out.println("[FAILED] " + e.getMessage());
             return;
         } catch (exception.BookingLimitExceededException e) {
-            System.out.println("[FAILED] Limit Exceeded: " + e.getMessage());
+            bookingController.cancelLockedSeat(seatId);
+            System.out.println("[FAILED] " + e.getMessage());
             return;
         } catch (IllegalStateException e) {
+            bookingController.cancelLockedSeat(seatId);
             System.out.println("[FAILED] " + e.getMessage());
             return;
         }
@@ -413,46 +444,4 @@ public class MainView {
         }
     }
 
-    private void showMyTickets() {
-        Fan currentFan = fanController.getCurrentFan();
-        List<Ticket> tickets = fanController.getMyTickets();
-
-        System.out.println("\n======================================");
-        System.out.println("       MY TICKET HISTORY (ALL)        ");
-        System.out.println("======================================");
-
-        if (tickets.isEmpty()) {
-            System.out.println("You have no tickets.");
-            return;
-        }
-
-        System.out.printf("%-16s %-12s %-14s %12s %-10s %-20s%n",
-                "Ticket ID", "Match", "Seat", "Price (VND)", "Status", "Booking Date");
-        System.out.println("-".repeat(90));
-
-        long totalPrice = 0;
-        for (Ticket t : tickets) {
-            System.out.printf("%-16s %-12s %-14s %,12d %-10s %-20s%n",
-                    t.getTicketId(),
-                    t.getMatchId(),
-                    t.getSeatId(),
-                    t.getPrice(),
-                    t.getStatus().name(),
-                    t.getBookedAt());
-            if (t.isValid()) {
-                totalPrice += t.getPrice();
-            }
-        }
-
-        System.out.println("-".repeat(90));
-        System.out.printf("Total: %d tickets | Total value: %,d VND (Valid tickets only)%n", tickets.size(), totalPrice);
-
-        // ── Wire BookingView: delegate sang BookingView để tái sử dụng logic hủy vé ──
-        System.out.println("\nDo you want to cancel a ticket? (y to cancel, Enter to skip): ");
-        System.out.print("> ");
-        String input = scanner.nextLine().trim();
-        if ("y".equalsIgnoreCase(input)) {
-            bookingView.handleCancellation();
-        }
-    }
 }

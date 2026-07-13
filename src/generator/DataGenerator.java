@@ -246,6 +246,16 @@ public class DataGenerator {
             }
             stIdx++; // advance stadium index for next stadium's SCHEDULED date offset
         }
+
+        // Sắp xếp: COMPLETED trước (theo ngày tăng dần), rồi SCHEDULED (theo ngày tăng dần)
+        result.sort((a, b) -> {
+            boolean aCompleted = a.status().equals("COMPLETED");
+            boolean bCompleted = b.status().equals("COMPLETED");
+            if (aCompleted && !bCompleted) return -1;
+            if (!aCompleted && bCompleted) return 1;
+            return a.matchDate().compareTo(b.matchDate());
+        });
+
         return result;
     }
 
