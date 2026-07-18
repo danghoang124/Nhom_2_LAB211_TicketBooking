@@ -1,1 +1,2 @@
 ticketId,fanId,seatId,matchId,transactionId,price,bookedAt,status
+TKT00000025,FAN_SIM_40,SEAT000002,MATCH001,TXN00000739,500000,2026-07-14 20:54:24,VALID
