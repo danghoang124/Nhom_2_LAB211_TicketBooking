@@ -3,8 +3,10 @@ package repository;
 import model.entity.Seat;
 import model.enums.SeatStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -24,6 +26,13 @@ public class SeatRepository extends CsvRepository<Seat> {
     // ── Singleton ─────────────────────────────────────────────────────────────
     private static final SeatRepository INSTANCE = new SeatRepository();
     public static SeatRepository getInstance() { return INSTANCE; }
+
+    /**
+     * ReentrantLock dùng cho cơ chế FILE_LOCK — giải quyết OverlappingFileLockException.
+     * Java FileLock chỉ hoạt động giữa các process, KHÔNG giữa các thread trong cùng JVM.
+     * ReentrantLock đảm bảo chỉ 1 thread được phép lock file tại một thời điểm.
+     */
+    private static final ReentrantLock FILE_LOCK_GUARD = new ReentrantLock();
 
     private static final String FILE_PATH = "data/seats.csv";
     private static final String HEADER    =
@@ -230,17 +239,43 @@ public class SeatRepository extends CsvRepository<Seat> {
 
     /**
      * Cập nhật trạng thái ghế sử dụng cơ chế File Lock.
-     * Khoá ở tầng OS đảm bảo không thread nào khác (thậm chí tiến trình khác) can thiệp.
+     *
+     * <p><b>Fix:</b> Dùng {@link ReentrantLock} bọc ngoài để tránh
+     * {@code OverlappingFileLockException} khi nhiều thread trong cùng JVM
+     * cùng gọi {@code channel.lock()}.
+     * Java {@link FileLock} chỉ lock giữa các <b>process</b>, không lock giữa
+     * các <b>thread</b> trong cùng JVM — nên cần ReentrantLock bổ sung.
+     *
+     * <p>Đồng thời đọc file trực tiếp qua {@link RandomAccessFile} thay vì
+     * gọi {@code findAll()} (mở FileInputStream riêng) để tránh xung đột
+     * file handle trên Windows.
      */
     public boolean updateStatusFileLock(String seatId, SeatStatus newStatus) {
-        try (RandomAccessFile file = new RandomAccessFile(FILE_PATH, "rw");
-             FileChannel channel = file.getChannel()) {
+        FILE_LOCK_GUARD.lock();
+        try (RandomAccessFile raf = new RandomAccessFile(FILE_PATH, "rw");
+             FileChannel channel = raf.getChannel()) {
 
-            // Lấy exclusive lock trên file
+            // OS-level lock — bảo vệ giữa các process khác nhau
             FileLock lock = channel.lock();
             try {
-                // Đọc toàn bộ (đã có OS lock nên an toàn khi dùng findAll)
-                List<Seat> all = findAll();
+                // Đọc toàn bộ file qua cùng một handle (tránh mở FileInputStream riêng)
+                byte[] data = new byte[(int) raf.length()];
+                raf.readFully(data);
+                String content = new String(data, java.nio.charset.StandardCharsets.UTF_8);
+                String[] lines = content.split("\\r?\\n");
+
+                // Parse tất cả seats từ file content
+                List<Seat> all = new ArrayList<>();
+                for (int idx = 1; idx < lines.length; idx++) {
+                    String line = lines[idx].trim();
+                    if (line.isEmpty()) continue;
+                    try {
+                        all.add(Seat.fromCsvLine(line));
+                    } catch (Exception e) {
+                        // Bỏ qua dòng lỗi
+                    }
+                }
+
                 boolean updated = false;
                 for (int i = 0; i < all.size(); i++) {
                     Seat seat = all.get(i);
@@ -256,14 +291,15 @@ public class SeatRepository extends CsvRepository<Seat> {
                 }
 
                 if (updated) {
-                    // Xóa file cũ và ghi lại nội dung mới bằng UTF-8 (nhất quán với CsvRepository)
-                    file.setLength(0);
+                    // Ghi lại toàn bộ file qua cùng handle
+                    raf.seek(0);
+                    raf.setLength(0);
                     StringBuilder sb = new StringBuilder();
                     sb.append(getCsvHeader()).append(System.lineSeparator());
                     for (Seat s : all) {
                         sb.append(s.toCsvLine()).append(System.lineSeparator());
                     }
-                    file.write(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    raf.write(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     return true;
                 }
                 return false;
@@ -273,11 +309,12 @@ public class SeatRepository extends CsvRepository<Seat> {
                 }
             }
         } catch (Exception e) {
-            // In cả tên class exception để dễ debug, tránh in "null" khi getMessage() == null
             System.err.println("Error during FileLock update: "
                 + e.getClass().getSimpleName() + " - "
                 + (e.getMessage() != null ? e.getMessage() : "(no message)"));
             return false;
+        } finally {
+            FILE_LOCK_GUARD.unlock();
         }
     }
 }
