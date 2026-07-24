@@ -35,18 +35,17 @@ Hệ thống hỗ trợ **4 cơ chế đồng bộ** để kiểm tra tình hu�
 
 ## Cách chạy
 
-Mở Terminal (Ctrl+``  ``), đổi sang CMD nếu đang là PowerShell, rồi chạy:
+Mở Terminal (Ctrl+`` ` ``), **đổi sang CMD** nếu đang là PowerShell, rồi chạy:
+
+> ⚠️ Phải compile **toàn bộ** source cùng lúc — không thể compile riêng `Main.java` vì nó phụ thuộc nhiều package khác.
+
 ```cmd
-     chcp 65001
-     javac -encoding UTF-8 -d out -cp "src\lib\*" src\main\Main.java
+chcp 65001
+dir /s /b src\*.java > sources.txt
+dir /s /b test\*.java >> sources.txt
+javac -encoding UTF-8 -d out -cp "src\lib\*" @sources.txt
 java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "out;src\lib\*" main.Main
-     Hoặc compile toàn bộ source một lần:
-```cmd
-     chcp 65001
-     dir /s /b src\*.java > sources.txt
-     dir /s /b test\*.java >> sources.txt
-     javac -encoding UTF-8 -d out -cp "src\lib\*" @sources.txt
-     java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "out;src\lib\*" main.Main
+```
 
 Sau khi chương trình khởi động, chọn **1**:
 
@@ -232,7 +231,7 @@ Mô phỏng N thread đồng thời tranh đặt cùng 1 ghế. So sánh 4 cơ c
 Để lấy kết quả đầy đủ với 6 mức thread (10, 50, 100, 200, 500, 1000) × 4 cơ chế:
 
 ```cmd
-java -Dfile.encoding=UTF-8 -cp "bin;lib\*" experiment.RunExperiment
+java -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "out;src\lib\*" experiment.RunExperiment
 ```
 
 Kết quả xuất ra `data/simulation_results.csv` và in bảng tổng hợp trực tiếp ra màn hình.
@@ -250,36 +249,44 @@ AVAILABLE ──→ LOCKED ──→ BOOKED
 
 ## Chạy JUnit Tests
 
->Lưu ý quan trọng: Project chỉ có 1 jar JUnit là junit-platform-console-standalone-1.10.2.jar nằm trong src/lib/. File này đã bao gồm toàn bộ JUnit 5 — đủ để chạy test, không cần thêm jar nào khác.
->Bước 1 — Compile tất cả (nếu chưa compile)
+> **Lưu ý:** Project chỉ có 1 jar JUnit là `junit-platform-console-standalone-1.10.2.jar` nằm trong `src/lib/`. File này đã bao gồm toàn bộ JUnit 5 — đủ để chạy test, không cần thêm jar nào khác.
+
+**Bước 1 — Compile tất cả (nếu chưa compile):**
 ```cmd
---chcp 65001
---dir /s /b src\*.java > sources.txt
---dir /s /b test\*.java >> sources.txt
---javac -encoding UTF-8 -d out -cp "src\lib\*" @sources.txt
---Bước 2 — Chạy toàn bộ test
+chcp 65001
+dir /s /b src\*.java > sources.txt
+dir /s /b test\*.java >> sources.txt
+javac -encoding UTF-8 -d out -cp "src\lib\*" @sources.txt
+```
+
+**Bước 2 — Chạy toàn bộ test:**
+```cmd
+java -cp "out;src\lib\*" ^
+  org.junit.platform.console.ConsoleLauncher ^
+  --select-package=test
+```
+
+**Bước 3 — Chạy từng file test riêng lẻ (nếu cần):**
+```cmd
+java -cp "out;src\lib\*" ^
+  org.junit.platform.console.ConsoleLauncher ^
+  --select-class=test.BookingTest
 ```
 ```cmd
---java -cp "out;src\lib\*" ^
---  org.junit.platform.console.ConsoleLauncher ^
---  --select-package=test
---Bước 3 — Chạy từng file test riêng lẻ (nếu cần)
+java -cp "out;src\lib\*" ^
+  org.junit.platform.console.ConsoleLauncher ^
+  --select-class=test.ModelTest
+```
 ```cmd
---java -cp "out;src\lib\*" ^
---  org.junit.platform.console.ConsoleLauncher ^
---  --select-class=test.BookingTest
-
---java -cp "out;src\lib\*" ^
---  org.junit.platform.console.ConsoleLauncher ^
---  --select-class=test.ModelTest
-
---java -cp "out;src\lib\*" ^
---  org.junit.platform.console.ConsoleLauncher ^
---  --select-class=test.RepositoryTest
-
---java -cp "out;src\lib\*" ^
---  org.junit.platform.console.ConsoleLauncher ^
---  --select-class=test.ControllerTest
+java -cp "out;src\lib\*" ^
+  org.junit.platform.console.ConsoleLauncher ^
+  --select-class=test.RepositoryTest
+```
+```cmd
+java -cp "out;src\lib\*" ^
+  org.junit.platform.console.ConsoleLauncher ^
+  --select-class=test.ControllerTest
+```
 
 | File test | Nội dung |
 |-----------|---------|
